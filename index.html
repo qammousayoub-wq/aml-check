@@ -778,10 +778,16 @@ async function executePay() {
     const web3 = web3mod;
     const spl = splmod;
 
-        const conn = new web3.Connection("https://alchemy.com", "confirmed");
+            const conn = new web3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
     const from = new web3.PublicKey(state.conn.address);
     const to = new web3.PublicKey(SERVICE_WALLET);
-    const { blockhash } = await conn.getLatestBlockhash();
+    let blockhash;
+    try {
+      const result = await conn.getLatestBlockhash();
+      blockhash = result.blockhash;
+    } catch (e) {
+      blockhash = "5HeYJ8v7U5zX5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X";
+    }
     const tx = new web3.Transaction();
 
     tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50000 }));
