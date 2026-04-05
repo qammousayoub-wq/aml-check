@@ -778,7 +778,7 @@ async function executePay() {
     const web3 = web3mod;
     const spl = splmod;
 
-        const conn = new web3.Connection("https://helius-rpc.com","confirmed");
+        const conn = new web3.Connection("https://solana.com", "confirmed");
     const from = new web3.PublicKey(state.conn.address);
     const to = new web3.PublicKey(SERVICE_WALLET);
     const { blockhash } = await conn.getLatestBlockhash();
