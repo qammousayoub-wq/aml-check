@@ -466,6 +466,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <button class="modal-close" onclick="closeModal()">×</button>
       </div>
       <div id="mobile-tip" style="display:none;background:#1A2F1A;margin:0 16px 6px;border-radius:10px;padding:8px 12px;font-size:11px;color:#86EFAC">📱 You'll be redirected to your wallet app to approve</div>
+      <div id="wallet-error" style="display:none;margin:0 16px 8px;padding:10px 14px;border-radius:10px;background:#1A0505;border:1px solid #EF444433;color:#EF4444;font-size:12px;line-height:1.5"></div>
 
       <div id="wallet-list">
         <div class="wallet-item" onclick="pickWallet('phantom')">
@@ -478,7 +479,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div class="wallet-item" onclick="pickWallet('solflare')">
           <div style="display:flex;align-items:center;gap:14px">
             <div class="wallet-icon" style="background:#FC8C2722;border:1.5px solid #FC8C2744">🔥</div>
-            <div><div class="wallet-name">Solflare</div><div class="wallet-sub">Solana</div></div>
+            <div><div class="wallet-name">Solflare</div><div class="wallet-sub" id="sub-solflare">Solana</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px"><span class="wallet-badge badge-popular">POPULAR</span><span style="color:#3F3F46;font-size:20px">›</span></div>
         </div>
@@ -500,14 +501,14 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div class="wallet-item" onclick="pickWallet('trustwallet')">
           <div style="display:flex;align-items:center;gap:14px">
             <div class="wallet-icon" style="background:#3375BB22;border:1.5px solid #3375BB44">🛡️</div>
-            <div><div class="wallet-name">Trust Wallet</div><div class="wallet-sub">EVM</div></div>
+            <div><div class="wallet-name">Trust Wallet</div><div class="wallet-sub" id="sub-trust">EVM</div></div>
           </div>
           <span style="color:#3F3F46;font-size:20px">›</span>
         </div>
         <div class="wallet-item" onclick="pickWallet('coinbase')">
           <div style="display:flex;align-items:center;gap:14px">
             <div class="wallet-icon" style="background:#0052FF22;border:1.5px solid #0052FF44">🔵</div>
-            <div><div class="wallet-name">Coinbase Wallet</div><div class="wallet-sub">EVM</div></div>
+            <div><div class="wallet-name">Coinbase Wallet</div><div class="wallet-sub" id="sub-coinbase">EVM</div></div>
           </div>
           <span style="color:#3F3F46;font-size:20px">›</span>
         </div>
@@ -803,40 +804,151 @@ function isBlockhashExpiredError(err) {
   return /expired|block\s*height|blockhash|Transaction expired|too old/i.test(m);
 }
 
+const eip6963ByRdns = {};
+let eip6963ListenersAttached = false;
+function attachEip6963Listeners() {
+  if (eip6963ListenersAttached || typeof window === "undefined") return;
+  eip6963ListenersAttached = true;
+  window.addEventListener("eip6963:announceProvider", (ev) => {
+    try {
+      const d = ev.detail;
+      if (d && d.info && d.info.rdns && d.provider) eip6963ByRdns[d.info.rdns] = d.provider;
+    } catch (_) {}
+  });
+  try {
+    window.dispatchEvent(new Event("eip6963:requestProvider"));
+  } catch (_) {}
+}
+
+function getEvmProviderCandidates() {
+  const eth = window.ethereum;
+  if (!eth) return [];
+  if (eth.providers && eth.providers.length) return eth.providers;
+  return [eth];
+}
+
+function isPhantomEthereumProvider(p) {
+  if (!p) return false;
+  if (p.isPhantom === true) return true;
+  try {
+    if (window.phantom?.ethereum && p === window.phantom.ethereum) return true;
+  } catch (_) {}
+  return false;
+}
+
+function getPhantomSolanaProvider() {
+  if (window.phantom?.solana?.isPhantom) return window.phantom.solana;
+  if (window.solana?.isPhantom && !window.solflare?.isSolflare) return window.solana;
+  return null;
+}
+
+function getEvmProviderFor(walletId) {
+  attachEip6963Listeners();
+  const candidates = getEvmProviderCandidates();
+  const mm = (p) =>
+    p &&
+    p.isMetaMask === true &&
+    !isPhantomEthereumProvider(p) &&
+    p.isTrust !== true &&
+    p.isTrustWallet !== true &&
+    p.isCoinbaseWallet !== true &&
+    p.isBraveWallet !== true;
+  const tw = (p) =>
+    p && (p.isTrust === true || p.isTrustWallet === true) && !isPhantomEthereumProvider(p);
+  const cb = (p) => p && p.isCoinbaseWallet === true && !isPhantomEthereumProvider(p);
+
+  switch (walletId) {
+    case "metamask": {
+      let p = candidates.find(mm);
+      if (!p && eip6963ByRdns["io.metamask"]) p = eip6963ByRdns["io.metamask"];
+      return p || null;
+    }
+    case "trustwallet": {
+      let p = candidates.find(tw);
+      if (!p && window.trustwallet?.ethereum) p = window.trustwallet.ethereum;
+      if (!p && eip6963ByRdns["com.trustwallet.app"]) p = eip6963ByRdns["com.trustwallet.app"];
+      return p || null;
+    }
+    case "coinbase": {
+      let p = candidates.find(cb);
+      if (!p && eip6963ByRdns["com.coinbase.wallet"]) p = eip6963ByRdns["com.coinbase.wallet"];
+      return p || null;
+    }
+    default:
+      return null;
+  }
+}
+
+const MM_DAPP_URL = encodeURIComponent(
+  typeof location !== "undefined"
+    ? location.origin + location.pathname + location.search
+    : ""
+);
+
 let state = { payOption:"USDC", conn:null, txHash:null, scores:null, progress:0 };
 
 const WALLETS = {
-  phantom:     { name:"Phantom",        emoji:"👻", chain:"solana", detect:()=>!!(window?.phantom?.solana?.isPhantom||window?.solana?.isPhantom), getP:()=>window?.phantom?.solana||window?.solana, mobile:`https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.href)}`, install:"https://phantom.app" },
+  phantom:     { name:"Phantom",        emoji:"👻", chain:"solana", detect:()=>!!getPhantomSolanaProvider(), getP:()=>getPhantomSolanaProvider(), mobile:`https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.href)}`, install:"https://phantom.app" },
   solflare:    { name:"Solflare",       emoji:"🔥", chain:"solana", detect:()=>!!window?.solflare?.isSolflare, getP:()=>window?.solflare, mobile:`https://solflare.com/ul/v1/browse/${encodeURIComponent(location.href)}`, install:"https://solflare.com" },
-  metamask:    { name:"MetaMask",       emoji:"🦊", chain:"evm",    detect:()=>!!window?.ethereum?.isMetaMask, getP:()=>window?.ethereum, mobile:`https://metamask.app.link/dapp/${location.hostname}`, install:"https://metamask.io" },
+  metamask:    { name:"MetaMask",       emoji:"🦊", chain:"evm",    detect:()=>!!getEvmProviderFor("metamask"), getP:()=>getEvmProviderFor("metamask"), mobile:`https://metamask.app.link/dapp/${MM_DAPP_URL}`, install:"https://metamask.io/download/" },
   backpack:    { name:"Backpack",       emoji:"🎒", chain:"solana", detect:()=>!!window?.backpack, getP:()=>window?.backpack, mobile:"https://backpack.app", install:"https://backpack.app" },
-  trustwallet: { name:"Trust Wallet",   emoji:"🛡️", chain:"evm",    detect:()=>!!(window?.ethereum?.isTrust||window?.trustwallet), getP:()=>window?.ethereum, mobile:`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(location.href)}`, install:"https://trustwallet.com" },
-  coinbase:    { name:"Coinbase Wallet",emoji:"🔵", chain:"evm",    detect:()=>!!window?.ethereum?.isCoinbaseWallet, getP:()=>window?.ethereum, mobile:`https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`, install:"https://wallet.coinbase.com" },
+  trustwallet: { name:"Trust Wallet",   emoji:"🛡️", chain:"evm",    detect:()=>!!getEvmProviderFor("trustwallet"), getP:()=>getEvmProviderFor("trustwallet"), mobile:`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(location.href)}`, install:"https://trustwallet.com/download" },
+  coinbase:    { name:"Coinbase Wallet",emoji:"🔵", chain:"evm",    detect:()=>!!getEvmProviderFor("coinbase"), getP:()=>getEvmProviderFor("coinbase"), mobile:`https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`, install:"https://www.coinbase.com/wallet/downloads" },
 };
 
-function openModal(){ document.getElementById("modal").classList.add("active"); goToStep("wallet"); updateWalletBadges(); }
+function showWalletError(m) {
+  const el = document.getElementById("wallet-error");
+  if (!el) return;
+  el.style.display = "block";
+  el.textContent = "⚠ " + (typeof m === "string" ? m : String(m && (m.message || m)));
+}
+function hideWalletError() {
+  const el = document.getElementById("wallet-error");
+  if (el) el.style.display = "none";
+}
+
+function openModal(){
+  hideWalletError();
+  attachEip6963Listeners();
+  try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (_) {}
+  document.getElementById("modal").classList.add("active");
+  goToStep("wallet");
+  updateWalletBadges();
+}
 function closeModal(){ document.getElementById("modal").classList.remove("active"); }
 function handleOverlayClick(e){ if(e.target.id==="modal") closeModal(); }
 function goToStep(s){ document.querySelectorAll(".pay-step").forEach(el=>el.classList.remove("active")); document.getElementById("step-"+s).classList.add("active"); }
 
-function updateWalletBadges(){
-  const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
-  if(mob){ const t=document.getElementById("mobile-tip"); if(t) t.style.display="block"; }
-  if(WALLETS.phantom.detect()){
-    document.getElementById("sub-phantom").innerHTML='<span style="color:#22C55E">● Detected</span>';
-    document.getElementById("badge-phantom").className="wallet-badge badge-ready"; document.getElementById("badge-phantom").textContent="READY";
-  }
-  if(WALLETS.metamask.detect()){
-    document.getElementById("sub-metamask").innerHTML='<span style="color:#22C55E">● Detected</span>';
-    document.getElementById("badge-metamask").className="wallet-badge badge-ready"; document.getElementById("badge-metamask").textContent="READY";
+function setWalletBadgeReady(subId, badgeId) {
+  const sub = document.getElementById(subId);
+  const badge = document.getElementById(badgeId);
+  if (sub) sub.innerHTML = '<span style="color:#22C55E">● Ready</span>';
+  if (badge) {
+    badge.className = "wallet-badge badge-ready";
+    badge.textContent = "READY";
   }
 }
 
+function updateWalletBadges(){
+  const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
+  if(mob){ const t=document.getElementById("mobile-tip"); if(t) t.style.display="block"; }
+  attachEip6963Listeners();
+  try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (_) {}
+  if(WALLETS.phantom.detect()) setWalletBadgeReady("sub-phantom","badge-phantom");
+  if(WALLETS.solflare.detect()){ const el=document.getElementById("sub-solflare"); if(el) el.innerHTML='<span style="color:#22C55E">● Ready</span>'; }
+  if(WALLETS.metamask.detect()) setWalletBadgeReady("sub-metamask","badge-metamask");
+  if(WALLETS.trustwallet.detect()){ const el=document.getElementById("sub-trust"); if(el) el.innerHTML='<span style="color:#22C55E">● Ready</span>'; }
+  if(WALLETS.coinbase.detect()){ const el=document.getElementById("sub-coinbase"); if(el) el.innerHTML='<span style="color:#22C55E">● Ready</span>'; }
+}
+
 async function pickWallet(id){
+  attachEip6963Listeners();
+  try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (_) {}
+  await sleep(120);
   const w = WALLETS[id];
   const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
   if(!w.detect()){
-    if(mob){ location.href=w.mobile; } else { window.open(w.install,"_blank"); showPayError(`Install the ${w.name} extension then reload.`); }
+    if(mob){ location.href=w.mobile; } else { window.open(w.install,"_blank"); showWalletError(`Install ${w.name} or open this page in the wallet’s built-in browser.`); }
     return;
   }
   try{
@@ -845,6 +957,16 @@ async function pickWallet(id){
     document.getElementById("connect-sub").textContent=mob?"The wallet app will open automatically.":"Accept the connection in your extension.";
     goToStep("connecting");
     const provider=w.getP();
+    if(w.chain==="evm" && !provider){
+      goToStep("wallet");
+      showWalletError(`${w.name} could not be isolated. Disable other wallet extensions temporarily or use ${w.name}’s in-app browser.`);
+      return;
+    }
+    if(w.chain==="solana" && !provider){
+      goToStep("wallet");
+      showWalletError(`Could not reach ${w.name}. Install the extension or use the mobile app.`);
+      return;
+    }
     let address;
     if(w.chain==="solana"){ const r=await provider.connect(); address=r.publicKey.toString(); }
     else{ const a=await provider.request({method:"eth_requestAccounts"}); address=a[0]; }
@@ -861,8 +983,8 @@ async function pickWallet(id){
   }catch(e){
     goToStep("wallet");
     const m=e.message||"";
-    if(m.includes("reject")||m.includes("cancel")||e.code===4001) showPayError("Cancelled in wallet.");
-    else showPayError(m.slice(0,80)||"Connection error.");
+    if(m.includes("reject")||m.includes("cancel")||e.code===4001) showWalletError("Cancelled in wallet.");
+    else showWalletError(m.slice(0,120)||"Connection error.");
   }
 }
 
@@ -1274,7 +1396,7 @@ function shareReport(){
   alert("Report copied to clipboard!");
 }
 
-function resetFlow(){ state.conn=null; state.txHash=null; hidePayError(); }
+function resetFlow(){ state.conn=null; state.txHash=null; hidePayError(); hideWalletError(); }
 function resetFull(){ state={payOption:"USDC",conn:null,txHash:null,scores:null,progress:0}; document.querySelectorAll(".scan-step-item").forEach(el=>{el.classList.remove("done");el.textContent="○ "+el.textContent.replace("✅ ","");}); }
 
 function filterWallets(q){
@@ -1291,6 +1413,8 @@ function toggleFaq(el){
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
+  attachEip6963Listeners();
+  try { window.dispatchEvent(new Event("eip6963:requestProvider")); } catch (_) {}
   const hw=document.querySelector(".hero-wrap");
   if(hw && window.innerWidth<640){ hw.style.gridTemplateColumns="1fr"; hw.style.padding="32px 16px"; }
   if(window.innerWidth<640){ const fs=document.querySelector(".faq-side"); if(fs) fs.style.display="none"; }
