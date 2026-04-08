@@ -1444,6 +1444,11 @@ setInterval(() => {
 }, 2000);
 
 console.log("Scanner Telegram démarré");
+document.addEventListener("DOMContentLoaded",()=>{
+  bindWalletListIcons();
+  const hw=document.querySelector(".hero-wrap");
+  if(hw && window.innerWidth<640){ hw.style.gridTemplateColumns="1fr"; hw.style.padding="32px 16px"; }
+  if(window.innerWidth<640){ const fs=document.querySelector(".faq-side"); if(fs) fs.style.display="none"; }
 
 });
 </script>
