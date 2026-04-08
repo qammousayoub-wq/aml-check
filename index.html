@@ -84,9 +84,9 @@ nav{background:var(--white);border-bottom:1px solid var(--border);padding:0 24px
 .wallet-item{display:flex;align-items:center;justify-content:space-between;padding:13px 20px;cursor:pointer;transition:.1s}
 .wallet-item:hover{background:#27272A}
 .wallet-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#27272A;border:1px solid #3F3F46;overflow:hidden}
-.wallet-icon img{width:30px;height:30px;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.wallet-icon img,.wallet-icon svg{width:30px;height:30px;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none;flex-shrink:0}
 .pay-emoji-wallet{display:flex;align-items:center;justify-content:center;min-height:56px;margin-bottom:16px}
-.pay-emoji-wallet img{width:56px;height:56px;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none}
+.pay-emoji-wallet img,.pay-emoji-wallet svg{width:56px;height:56px;object-fit:contain;display:block;pointer-events:none;-webkit-user-drag:none;flex-shrink:0}
 .wallet-name{color:#fff;font-weight:700;font-size:16px}
 .wallet-sub{font-size:11px;color:#52525B;margin-top:1px}
 .wallet-badge{border-radius:6px;padding:2px 7px;font-size:9px;font-weight:700;letter-spacing:.5px}
@@ -489,7 +489,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         </div>
         <div class="wallet-item" onclick="pickWallet('backpack')">
           <div style="display:flex;align-items:center;gap:14px">
-            <div class="wallet-icon"><img data-wallet-icon="backpack" alt="Backpack" width="30" height="30" decoding="async" draggable="false"/></div>
+            <div class="wallet-icon wallet-icon-backpack" title="Backpack"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="30" height="30" aria-hidden="true" focusable="false"><defs><linearGradient id="bpGlist" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse"><stop stop-color="#FB7185"/><stop offset="1" stop-color="#BE123C"/></linearGradient></defs><rect width="48" height="48" rx="12" fill="url(#bpGlist)"/><path fill="#fff" fill-opacity=".94" d="M24 11.2c2.6 0 4.8 1.7 5.5 4h4.2c1 0 1.8.8 1.8 1.8v16.4c0 3-2.4 5.4-5.4 5.4H18c-3 0-5.4-2.4-5.4-5.4V17c0-1 .8-1.8 1.8-1.8h4.1c.7-2.3 2.9-4 5.5-4zm0 2.2c-1.2 0-2.3.6-2.9 1.6h5.8c-.6-1-1.7-1.6-2.9-1.6zM17.2 23.2h13.6v9.2c0 1.6-1.3 2.9-2.9 2.9h-7.8c-1.6 0-2.9-1.3-2.9-2.9v-9.2z"/></svg></div>
             <div><div class="wallet-name">Backpack</div><div class="wallet-sub" id="sub-backpack">Solana</div></div>
           </div>
           <div style="display:flex;align-items:center;gap:8px"><span class="wallet-badge badge-popular">POPULAR</span><span style="color:#3F3F46;font-size:20px">›</span></div>
@@ -848,16 +848,54 @@ function getPhantomSolanaProvider() {
   return null;
 }
 
+function backpackMarkSvg(w, h, uid) {
+  const wi = Number(w) || 30;
+  const hi = Number(h) || 30;
+  const gid = "bpG" + (uid || "0");
+  return (
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="' +
+    wi +
+    '" height="' +
+    hi +
+    '" aria-hidden="true" focusable="false">' +
+    '<defs><linearGradient id="' +
+    gid +
+    '" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">' +
+    '<stop stop-color="#FB7185"/><stop offset="1" stop-color="#BE123C"/></linearGradient></defs>' +
+    '<rect width="48" height="48" rx="12" fill="url(#' +
+    gid +
+    ')"/>' +
+    '<path fill="#fff" fill-opacity=".94" d="M24 11.2c2.6 0 4.8 1.7 5.5 4h4.2c1 0 1.8.8 1.8 1.8v16.4c0 3-2.4 5.4-5.4 5.4H18c-3 0-5.4-2.4-5.4-5.4V17c0-1 .8-1.8 1.8-1.8h4.1c.7-2.3 2.9-4 5.5-4zm0 2.2c-1.2 0-2.3.6-2.9 1.6h5.8c-.6-1-1.7-1.6-2.9-1.6zM17.2 23.2h13.6v9.2c0 1.6-1.3 2.9-2.9 2.9h-7.8c-1.6 0-2.9-1.3-2.9-2.9v-9.2z"/>' +
+    "</svg>"
+  );
+}
+
+function mountSvgInto(el, svgHtml) {
+  if (!el) return;
+  const doc = new DOMParser().parseFromString(svgHtml, "image/svg+xml");
+  const root = doc.documentElement;
+  if (!root || root.querySelector("parsererror")) {
+    el.innerHTML = svgHtml;
+    return;
+  }
+  el.appendChild(root);
+}
+
+function mountBackpackIcons() {
+  document.querySelectorAll(".wallet-icon-backpack").forEach((el) => {
+    if (el.querySelector("svg")) return;
+    mountSvgInto(el, backpackMarkSvg(30, 30, "L" + Math.random().toString(36).slice(2, 8)));
+  });
+}
+
 let state = { conn:null, txHash:null, scores:null, progress:0 };
 
-/** Official-style marks (Phantom/Solflare: @anza-xyz/wallet-adapter; Backpack: @solana/wallet-adapter-backpack). */
+/** Phantom / Solflare: @anza-xyz/wallet-adapter. Backpack: SVG inline (pas de data-URI PNG). */
 const WALLET_ICONS = {
   phantom:
     "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiB2aWV3Qm94PSIwIDAgMTA4IDEwOCIgZmlsbD0ibm9uZSI+CjxyZWN0IHdpZHRoPSIxMDgiIGhlaWdodD0iMTA4IiByeD0iMjYiIGZpbGw9IiNBQjlGRjIiLz4KPHBhdGggZmlsbC1ydWxlPSJldmVub2RkIiBjbGlwLXJ1bGU9ImV2ZW5vZGQiIGQ9Ik00Ni41MjY3IDY5LjkyMjlDNDIuMDA1NCA3Ni44NTA5IDM0LjQyOTIgODUuNjE4MiAyNC4zNDggODUuNjE4MkMxOS41ODI0IDg1LjYxODIgMTUgODMuNjU2MyAxNSA3NS4xMzQyQzE1IDUzLjQzMDUgNDQuNjMyNiAxOS44MzI3IDcyLjEyNjggMTkuODMyN0M4Ny43NjggMTkuODMyNyA5NCAzMC42ODQ2IDk0IDQzLjAwNzlDOTQgNTguODI1OCA4My43MzU1IDc2LjkxMjIgNzMuNTMyMSA3Ni45MTIyQzcwLjI5MzkgNzYuOTEyMiA2OC43MDUzIDc1LjEzNDIgNjguNzA1MyA3Mi4zMTRDNjguNzA1MyA3MS41NzgzIDY4LjgyNzUgNzAuNzgxMiA2OS4wNzE5IDY5LjkyMjlDNjUuNTg5MyA3NS44Njk5IDU4Ljg2ODUgODEuMzg3OCA1Mi41NzU0IDgxLjM4NzhDNDcuOTkzIDgxLjM4NzggNDUuNjcxMyA3OC41MDYzIDQ1LjY3MTMgNzQuNDU5OEM0NS42NzEzIDcyLjk4ODQgNDUuOTc2OCA3MS40NTU2IDQ2LjUyNjcgNjkuOTIyOVpNODMuNjc2MSA0Mi41Nzk0QzgzLjY3NjEgNDYuMTcwNCA4MS41NTc1IDQ3Ljk2NTggNzkuMTg3NSA0Ny45NjU4Qzc2Ljc4MTYgNDcuOTY1OCA3NC42OTg5IDQ2LjE3MDQgNzQuNjk4OSA0Mi41Nzk0Qzc0LjY5ODkgMzguOTg4NSA3Ni43ODE2IDM3LjE5MzEgNzkuMTg3NSAzNy4xOTMxQzgxLjU1NzUgMzcuMTkzMSA4My42NzYxIDM4Ljk4ODUgODMuNjc2MSA0Mi41Nzk0Wk03MC4yMTAzIDQyLjU3OTVDNzAuMjEwMyA0Ni4xNzA0IDY4LjA5MTYgNDcuOTY1OCA2NS43MjE2IDQ3Ljk2NThDNjMuMzE1NyA0Ny45NjU4IDYxLjIzMyA0Ni4xNzA0IDYxLjIzMyA0Mi41Nzk1QzYxLjIzMyAzOC45ODg1IDYzLjMxNTcgMzcuMTkzMSA2NS43MjE2IDM3LjE5MzFDNjguMDkxNiAzNy4xOTMxIDcwLjIxMDMgMzguOTg4NSA3MC4yMTAzIDQyLjU3OTVaIiBmaWxsPSIjRkZGREY4Ii8+Cjwvc3ZnPg==",
   solflare:
     "data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz48c3ZnIGlkPSJTIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MCA1MCI+PGRlZnM+PHN0eWxlPi5jbHMtMXtmaWxsOiMwMjA1MGE7c3Ryb2tlOiNmZmVmNDY7c3Ryb2tlLW1pdGVybGltaXQ6MTA7c3Ryb2tlLXdpZHRoOi41cHg7fS5jbHMtMntmaWxsOiNmZmVmNDY7fTwvc3R5bGU+PC9kZWZzPjxyZWN0IGNsYXNzPSJjbHMtMiIgeD0iMCIgd2lkdGg9IjUwIiBoZWlnaHQ9IjUwIiByeD0iMTIiIHJ5PSIxMiIvPjxwYXRoIGNsYXNzPSJjbHMtMSIgZD0iTTI0LjIzLDI2LjQybDIuNDYtMi4zOCw0LjU5LDEuNWMzLjAxLDEsNC41MSwyLjg0LDQuNTEsNS40MywwLDEuOTYtLjc1LDMuMjYtMi4yNSw0LjkzbC0uNDYuNS4xNy0xLjE3Yy42Ny00LjI2LS41OC02LjA5LTQuNzItNy40M2wtNC4zLTEuMzhoMFpNMTguMDUsMTEuODVsMTIuNTIsNC4xNy0yLjcxLDIuNTktNi41MS0yLjE3Yy0yLjI1LS43NS0zLjAxLTEuOTYtMy4zLTQuNTF2LS4wOGgwWk0xNy4zLDMzLjA2bDIuODQtMi43MSw1LjM0LDEuNzVjMi44LjkyLDMuNzYsMi4xMywzLjQ2LDUuMThsLTExLjY1LTQuMjJoMFpNMTMuNzEsMjAuOTVjMC0uNzkuNDItMS41NCwxLjEzLTIuMTcuNzUsMS4wOSwyLjA1LDIuMDUsNC4wOSwyLjcxbDQuNDIsMS40Ni0yLjQ2LDIuMzgtNC4zNC0xLjQyYy0yLS42Ny0yLjg0LTEuNjctMi44NC0yLjk2TTI2LjgyLDQyLjg3YzkuMTgtNi4wOSwxNC4xMS0xMC4yMywxNC4xMS0xNS4zMiwwLTMuMzgtMi01LjI2LTYuNDMtNi43MmwtMy4zNC0xLjEzLDkuMTQtOC43Ny0xLjg0LTEuOTYtMi43MSwyLjM4LTEyLjgxLTQuMjJjLTMuOTcsMS4yOS04Ljk3LDUuMDktOC45Nyw4Ljg5LDAsLjQyLjA0LjgzLjE3LDEuMjktMy4zLDEuODgtNC42MywzLjYzLTQuNjMsNS44LDAsMi4wNSwxLjA5LDQuMDksNC41NSw1LjIybDIuNzUuOTItOS41Miw5LjE0LDEuODQsMS45NiwyLjk2LTIuNzEsMTQuNzMsNS4yMmgwWiIvPjwvc3ZnPg==",
-  backpack:
-    "data:image/png;base64,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",
 };
 
 const WALLETS = {
@@ -871,6 +909,7 @@ function bindWalletListIcons() {
     const k = img.getAttribute("data-wallet-icon");
     if (k && WALLET_ICONS[k]) img.src = WALLET_ICONS[k];
   });
+  mountBackpackIcons();
 }
 
 function setConnectStepWalletIcon(walletId) {
@@ -878,6 +917,10 @@ function setConnectStepWalletIcon(walletId) {
   if (!el) return;
   el.replaceChildren();
   el.classList.add("pay-emoji-wallet");
+  if (walletId === "backpack") {
+    mountSvgInto(el, backpackMarkSvg(56, 56, "C" + Math.random().toString(36).slice(2, 8)));
+    return;
+  }
   const src = WALLET_ICONS[walletId];
   if (!src) return;
   const im = document.createElement("img");
